@@ -33,7 +33,6 @@ html, body {
   -webkit-text-size-adjust: 100%;
 }
 
-/* ヘッダー */
 header {
   position: sticky; top: 0; z-index: 10;
   background: rgba(245,245,247,0.92);
@@ -60,11 +59,31 @@ header {
   background: var(--card); color: var(--text);
   box-shadow: 0 1px 2px rgba(0,0,0,0.06);
 }
-
-/* リスト */
-main {
-  padding: 0 0 120px 0;
+.jump-bar {
+  display: flex; gap: 8px; padding: 10px 16px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+  align-items: center;
 }
+.jump-bar button {
+  border: 1px solid var(--border);
+  background: var(--card);
+  padding: 6px 12px; border-radius: 6px;
+  font-size: 13px; cursor: pointer;
+}
+.settings-btn {
+  margin-left: auto;
+  border: none !important;
+  background: transparent !important;
+  font-size: 20px !important;
+  padding: 4px 8px !important;
+}
+
+main {
+  padding: 0 0 calc(140px + env(safe-area-inset-bottom, 0)) 0;
+}
+
 .day-row {
   display: grid;
   grid-template-columns: 64px 1fr;
@@ -73,12 +92,16 @@ main {
   min-height: 56px;
   cursor: pointer;
   transition: background 0.1s;
+  position: relative;
 }
 .day-row:active { background: #f0f0f3; }
 .day-row.today { background: #fffbe6; }
+.day-row.selected {
+  background: #e3f2fd !important;
+  box-shadow: inset 4px 0 0 var(--accent);
+}
 .day-row.month-start {
   border-top: 8px solid var(--bg);
-  position: relative;
 }
 .day-row.month-start::before {
   content: attr(data-month);
@@ -96,7 +119,6 @@ main {
 .date-dow { font-size: 11px; color: var(--sub); margin-top: 2px; }
 .date-cell.sat .date-dow, .date-cell.sat .date-num { color: var(--weekend-sat); }
 .date-cell.sun .date-dow, .date-cell.sun .date-num { color: var(--weekend-sun); }
-.date-cell.holiday .date-dow, .date-cell.holiday .date-num { color: var(--weekend-sun); }
 
 .events-cell {
   padding: 8px 12px;
@@ -135,21 +157,163 @@ main {
 }
 .empty-row { color: var(--sub); font-size: 13px; padding: 4px 0; }
 
-/* FAB */
-.fab {
+.quick-bar {
   position: fixed;
-  right: 20px; bottom: calc(20px + env(safe-area-inset-bottom, 0));
-  width: 56px; height: 56px;
-  border-radius: 50%;
-  background: var(--accent);
-  color: white; font-size: 28px;
-  border: none;
-  box-shadow: 0 4px 16px rgba(0,122,255,0.4);
+  bottom: calc(56px + env(safe-area-inset-bottom, 0));
+  left: 0; right: 0;
+  background: rgba(255,255,255,0.96);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+  padding: 8px 12px;
+  z-index: 8;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.quick-bar.hidden { display: none; }
+.quick-target {
+  font-size: 12px; color: var(--sub); text-align: center;
+  min-height: 16px;
+}
+.quick-target.active {
+  color: var(--accent); font-weight: 600;
+}
+.quick-buttons {
+  display: flex; gap: 6px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 2px;
+}
+.quick-buttons::-webkit-scrollbar { display: none; }
+.quick-btn {
+  flex-shrink: 0;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: 10px;
+  font-size: 14px; font-weight: 500;
   cursor: pointer;
-  z-index: 5;
+  white-space: nowrap;
+  display: flex; align-items: center; gap: 6px;
+  min-height: 42px;
+}
+.quick-btn:active { background: #f0f0f3; }
+.quick-btn .swatch {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--shift);
+}
+.quick-btn.misc {
+  background: var(--accent); color: white; border-color: var(--accent);
+}
+.quick-btn.misc:active { opacity: 0.8; }
+
+.tab-bar {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: rgba(255,255,255,0.96);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+  display: flex;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  z-index: 9;
+}
+.tab-bar button {
+  flex: 1;
+  border: none; background: transparent;
+  padding: 8px 4px;
+  font-size: 11px;
+  color: var(--sub);
+  cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+}
+.tab-bar button .ico { font-size: 22px; }
+.tab-bar button.active { color: var(--accent); }
+
+.album-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  padding: 0;
+}
+.album-item {
+  position: relative;
+  aspect-ratio: 1;
+  background: var(--border);
+  cursor: pointer;
+  overflow: hidden;
+}
+.album-item img {
+  width: 100%; height: 100%; object-fit: cover;
+}
+.album-item.shared::after {
+  content: '共有';
+  position: absolute; top: 4px; right: 4px;
+  background: rgba(255,59,48,0.9); color: white;
+  font-size: 9px; padding: 2px 4px; border-radius: 3px;
+}
+.album-empty {
+  text-align: center; padding: 60px 20px;
+  color: var(--sub);
+}
+.album-header {
+  padding: 12px 16px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  font-size: 13px; color: var(--sub);
 }
 
-/* モーダル */
+.photo-viewer {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.95);
+  display: none;
+  align-items: center; justify-content: center;
+  z-index: 200;
+  padding: 20px;
+}
+.photo-viewer.show { display: flex; }
+.photo-viewer img {
+  max-width: 100%; max-height: 75vh;
+  object-fit: contain;
+}
+.photo-viewer .controls {
+  position: absolute;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0));
+  left: 0; right: 0;
+  display: flex; justify-content: center; gap: 12px;
+  flex-wrap: wrap;
+  padding: 0 20px;
+}
+.photo-viewer .controls button {
+  background: rgba(255,255,255,0.2);
+  color: white; border: none;
+  padding: 10px 16px; border-radius: 8px;
+  font-size: 13px; cursor: pointer;
+}
+.photo-viewer .controls button.share-btn {
+  background: rgba(52,199,89,0.5);
+}
+.photo-viewer .controls button.share-btn.on {
+  background: rgba(255,59,48,0.7);
+}
+.photo-viewer .close-btn {
+  position: absolute;
+  top: calc(20px + env(safe-area-inset-top, 0));
+  right: 20px;
+  background: rgba(255,255,255,0.2);
+  color: white; border: none;
+  width: 40px; height: 40px;
+  border-radius: 50%; font-size: 20px;
+  cursor: pointer;
+}
+.photo-viewer .meta {
+  position: absolute;
+  top: calc(20px + env(safe-area-inset-top, 0));
+  left: 20px;
+  color: white; font-size: 13px;
+  background: rgba(0,0,0,0.4);
+  padding: 6px 10px; border-radius: 6px;
+}
+
 .modal-overlay {
   position: fixed; inset: 0;
   background: rgba(0,0,0,0.4);
@@ -170,6 +334,7 @@ main {
   -webkit-overflow-scrolling: touch;
 }
 .modal h2 { margin: 0 0 16px 0; font-size: 18px; }
+.modal h3 { margin: 16px 0 8px 0; font-size: 14px; color: var(--sub); }
 .field { margin-bottom: 14px; }
 .field label {
   display: block; font-size: 13px; color: var(--sub); margin-bottom: 6px; font-weight: 500;
@@ -177,17 +342,19 @@ main {
 .field input[type="text"],
 .field input[type="date"],
 .field input[type="time"],
+.field input[type="color"],
 .field textarea,
 .field select {
   width: 100%;
   padding: 10px 12px;
   border: 1px solid var(--border);
   border-radius: 8px;
-  font-size: 16px; /* iOS自動ズーム回避 */
+  font-size: 16px;
   background: var(--bg);
   font-family: inherit;
 }
 .field textarea { min-height: 80px; resize: vertical; }
+.field input[type="color"] { padding: 4px; height: 44px; }
 .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .kind-tabs {
   display: flex; gap: 6px; margin-bottom: 14px;
@@ -215,6 +382,7 @@ main {
   position: relative; width: 50px; height: 30px;
   background: #ccc; border-radius: 15px;
   cursor: pointer; transition: background 0.2s;
+  flex-shrink: 0;
 }
 .toggle-switch.on { background: var(--shift); }
 .toggle-switch::after {
@@ -261,68 +429,126 @@ main {
 .btn-save { background: var(--accent); color: white; }
 .btn-delete { background: var(--shared); color: white; }
 
-/* 詳細表示 */
 .detail-event {
   display: flex; align-items: flex-start; gap: 10px;
   padding: 12px; background: var(--bg);
   border-radius: 10px; margin-bottom: 10px;
 }
 .detail-event .body { flex: 1; min-width: 0; }
-.detail-event .title { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+.detail-event .ttl { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
 .detail-event .meta { font-size: 12px; color: var(--sub); }
 .detail-event .note { font-size: 13px; color: var(--text); margin-top: 6px; white-space: pre-wrap; }
 .detail-event .imgs { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
-.detail-event .imgs img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; }
-.detail-actions { display: flex; gap: 6px; }
+.detail-event .imgs img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; cursor:pointer; }
+.detail-actions { display: flex; gap: 6px; margin-top: 8px; }
 .detail-actions button {
   border: none; background: transparent; padding: 4px 8px;
   font-size: 12px; color: var(--accent); cursor: pointer;
 }
 .detail-actions .del-btn { color: var(--shared); }
-
-/* 範囲ジャンプ */
-.jump-bar {
-  display: flex; gap: 8px; padding: 10px 16px;
-  background: var(--card);
-  border-bottom: 1px solid var(--border);
-  font-size: 14px;
-}
-.jump-bar button {
-  border: 1px solid var(--border);
-  background: var(--card);
-  padding: 6px 12px; border-radius: 6px;
-  font-size: 13px; cursor: pointer;
+.detail-event .dot {
+  margin-top: 8px; width: 10px; height: 10px;
+  border-radius: 50%; flex-shrink: 0;
 }
 
-/* ローディング */
-.loading {
-  text-align: center; padding: 20px; color: var(--sub); font-size: 13px;
+.shift-list-item {
+  display: grid;
+  grid-template-columns: 24px 1fr auto;
+  gap: 10px; align-items: center;
+  padding: 10px; background: var(--bg);
+  border-radius: 8px; margin-bottom: 8px;
 }
+.shift-list-item .swatch {
+  width: 24px; height: 24px; border-radius: 50%;
+}
+.shift-list-item .info {
+  font-size: 14px; min-width: 0;
+}
+.shift-list-item .info .sub {
+  font-size: 11px; color: var(--sub);
+}
+.shift-list-item .actions {
+  display: flex; gap: 4px;
+}
+.shift-list-item .actions button {
+  border: none; background: transparent;
+  padding: 4px 8px; font-size: 12px;
+  color: var(--accent); cursor: pointer;
+}
+.add-shift-btn {
+  width: 100%; padding: 10px;
+  border: 1px dashed var(--border);
+  background: transparent; border-radius: 8px;
+  color: var(--accent); font-size: 14px;
+  cursor: pointer; margin-top: 8px;
+}
+
+.album-fab {
+  position: fixed;
+  right: 20px;
+  bottom: calc(70px + env(safe-area-inset-bottom, 0));
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white; font-size: 28px;
+  border: none;
+  box-shadow: 0 4px 16px rgba(0,122,255,0.4);
+  cursor: pointer;
+  z-index: 5;
+  display: none;
+  align-items: center; justify-content: center;
+}
+.album-fab.show { display: flex; }
+.album-fab input { display: none; }
 </style>
 </head>
 <body>
 
 <header>
   <div class="header-inner">
-    <div class="title">家族カレンダー</div>
-    <div class="user-toggle">
+    <div class="title" id="header-title">家族カレンダー</div>
+    <div class="user-toggle" id="user-toggle">
       <button id="user-self" class="active">自分</button>
       <button id="user-family">家族</button>
     </div>
   </div>
-  <div class="jump-bar">
+  <div class="jump-bar" id="jump-bar">
     <button id="jump-today">今日</button>
-    <button id="jump-prev">◀ 前月</button>
-    <button id="jump-next">次月 ▶</button>
-    <span id="current-month-label" style="margin-left:auto;align-self:center;color:var(--sub);font-size:13px;"></span>
+    <button id="jump-prev">◀</button>
+    <button id="jump-next">▶</button>
+    <span id="current-month-label" style="margin-left:8px;align-self:center;color:var(--sub);font-size:13px;"></span>
+    <button class="settings-btn" id="open-settings">⚙</button>
   </div>
 </header>
 
-<main id="calendar-list"></main>
+<main id="calendar-view">
+  <div id="calendar-list"></div>
+</main>
 
-<button class="fab" id="fab">＋</button>
+<main id="album-view" style="display:none;">
+  <div class="album-header" id="album-header"></div>
+  <div class="album-grid" id="album-grid"></div>
+</main>
 
-<!-- 編集モーダル -->
+<label class="album-fab" id="album-fab">
+  ＋
+  <input type="file" id="album-file" accept="image/*" multiple>
+</label>
+
+<div class="quick-bar" id="quick-bar">
+  <div class="quick-target" id="quick-target">日付をタップしてシフトを選択</div>
+  <div class="quick-buttons" id="quick-buttons"></div>
+</div>
+
+<nav class="tab-bar">
+  <button id="tab-cal" class="active">
+    <span class="ico">📅</span><span>カレンダー</span>
+  </button>
+  <button id="tab-album">
+    <span class="ico">📷</span><span>アルバム</span>
+  </button>
+</nav>
+
 <div class="modal-overlay" id="edit-modal">
   <div class="modal">
     <h2 id="modal-title">予定を追加</h2>
@@ -334,14 +560,14 @@ main {
     </div>
     <div class="field">
       <label>タイトル</label>
-      <input type="text" id="f-title" placeholder="例: 早番 / 通院 / 買い物">
+      <input type="text" id="f-title" placeholder="例: 通院 / 買い物">
     </div>
     <div class="row-2">
       <div class="field">
         <label>日付</label>
         <input type="date" id="f-date">
       </div>
-      <div class="field" id="time-field">
+      <div class="field">
         <label>時刻(任意)</label>
         <input type="time" id="f-time">
       </div>
@@ -368,7 +594,6 @@ main {
   </div>
 </div>
 
-<!-- 詳細モーダル -->
 <div class="modal-overlay" id="detail-modal">
   <div class="modal">
     <h2 id="detail-date-label"></h2>
@@ -380,72 +605,139 @@ main {
   </div>
 </div>
 
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal">
+    <h2>設定</h2>
+    <h3>シフトパターン</h3>
+    <div id="shift-patterns-list"></div>
+    <button class="add-shift-btn" id="add-shift-pattern">＋ シフトを追加</button>
+    
+    <h3>データ管理</h3>
+    <div class="modal-actions" style="margin-bottom:8px;">
+      <button class="btn-cancel" id="export-data">バックアップ</button>
+      <button class="btn-cancel" id="import-data">読み込み</button>
+    </div>
+    <input type="file" id="import-file" accept=".json" style="display:none;">
+    
+    <div class="modal-actions" style="margin-top:24px;">
+      <button class="btn-cancel" id="settings-close">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="shift-edit-modal">
+  <div class="modal">
+    <h2 id="shift-edit-title">シフト編集</h2>
+    <div class="field">
+      <label>名称</label>
+      <input type="text" id="sf-name" placeholder="例: 早番">
+    </div>
+    <div class="row-2">
+      <div class="field">
+        <label>開始時刻(任意)</label>
+        <input type="time" id="sf-start">
+      </div>
+      <div class="field">
+        <label>終了時刻(任意)</label>
+        <input type="time" id="sf-end">
+      </div>
+    </div>
+    <div class="field">
+      <label>カラー</label>
+      <input type="color" id="sf-color" value="#34c759">
+    </div>
+    <div class="share-toggle">
+      <span class="label">家族と共有する(デフォルト)</span>
+      <div class="toggle-switch" id="sf-share"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="sf-cancel">キャンセル</button>
+      <button class="btn-delete" id="sf-delete" style="display:none;">削除</button>
+      <button class="btn-save" id="sf-save">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="photo-viewer" id="photo-viewer">
+  <button class="close-btn" id="pv-close">×</button>
+  <div class="meta" id="pv-meta"></div>
+  <img id="pv-img">
+  <div class="controls">
+    <button id="pv-prev">◀</button>
+    <button id="pv-share" class="share-btn">共有</button>
+    <button id="pv-delete">削除</button>
+    <button id="pv-next">▶</button>
+  </div>
+</div>
+
 <script>
-// ============================================================
-// データ層
-// ============================================================
-const STORAGE_KEY = 'family-calendar-v1';
+const STORAGE_KEY = 'family-calendar-v2';
+
+const DEFAULT_SHIFTS = [
+  { id: 'sh-asa',  name: '早番', start: '06:00', end: '14:30', color: '#34c759', shared: true },
+  { id: 'sh-oso',  name: '遅番', start: '13:00', end: '22:00', color: '#ff9500', shared: true },
+  { id: 'sh-ake',  name: '明け', start: '',      end: '',      color: '#5ac8fa', shared: true },
+  { id: 'sh-yasu', name: '公休', start: '',      end: '',      color: '#af52de', shared: true }
+];
 
 function loadData() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { events: [] };
-    return JSON.parse(raw);
+    if (!raw) return { events: [], shifts: DEFAULT_SHIFTS, album: [] };
+    const d = JSON.parse(raw);
+    if (!d.shifts) d.shifts = DEFAULT_SHIFTS;
+    if (!d.album) d.album = [];
+    return d;
   } catch(e) {
-    console.error('loadData error', e);
-    return { events: [] };
+    return { events: [], shifts: DEFAULT_SHIFTS, album: [] };
   }
 }
-
 function saveData(data) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch(e) {
-    alert('保存に失敗しました(容量超過の可能性があります): ' + e.message);
-  }
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+  catch(e) { alert('保存に失敗(容量超過の可能性): ' + e.message); }
 }
 
 let state = loadData();
-let viewUser = 'self'; // 'self' or 'family'
+let viewUser = 'self';
+let viewMode = 'calendar';
+let selectedDate = null;
 let editingId = null;
 let editingKind = 'shift';
 let editingShared = false;
 let editingImages = [];
+let editingShiftId = null;
+let editingShiftShared = true;
+let viewerImages = [];
+let viewerIndex = 0;
+let viewerMode = 'album';
+let viewerPhotos = [];
+let currentCenterDate = new Date();
 
-function uid() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2,6);
-}
-
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 function ymd(d) {
   const y = d.getFullYear();
   const m = String(d.getMonth()+1).padStart(2,'0');
   const day = String(d.getDate()).padStart(2,'0');
   return `${y}-${m}-${day}`;
 }
-
-function parseYmd(s) {
-  const [y,m,d] = s.split('-').map(Number);
-  return new Date(y, m-1, d);
+function parseYmd(s) { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); }
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-// ============================================================
-// 描画
-// ============================================================
 const DOW = ['日','月','火','水','木','金','土'];
-
 function isVisibleForUser(ev) {
-  if (viewUser === 'self') return true; // 自分は全部見れる
-  // 家族側は shared:true のものだけ
+  if (viewUser === 'self') return true;
   return ev.shared === true;
 }
 
-function renderCalendar(centerDate) {
+function renderCalendar() {
   const main = document.getElementById('calendar-list');
   main.innerHTML = '';
-  const start = new Date(centerDate);
+  const start = new Date(currentCenterDate);
   start.setDate(1);
   start.setMonth(start.getMonth() - 1);
-  const end = new Date(centerDate);
+  const end = new Date(currentCenterDate);
   end.setDate(1);
   end.setMonth(end.getMonth() + 2);
   
@@ -471,16 +763,14 @@ function renderCalendar(centerDate) {
       lastMonth = m;
     }
     if (dateStr === today) row.classList.add('today');
+    if (dateStr === selectedDate) row.classList.add('selected');
     row.dataset.date = dateStr;
     
     const dateCell = document.createElement('div');
     dateCell.className = 'date-cell';
     if (dow === 0) dateCell.classList.add('sun');
     if (dow === 6) dateCell.classList.add('sat');
-    dateCell.innerHTML = `
-      <div class="date-num">${cur.getDate()}</div>
-      <div class="date-dow">${DOW[dow]}</div>
-    `;
+    dateCell.innerHTML = `<div class="date-num">${cur.getDate()}</div><div class="date-dow">${DOW[dow]}</div>`;
     
     const eventsCell = document.createElement('div');
     eventsCell.className = 'events-cell';
@@ -496,51 +786,110 @@ function renderCalendar(centerDate) {
         const timeStr = ev.time ? `${ev.time} ` : '';
         const sharedMark = (viewUser==='self' && ev.shared) ? '<span class="shared-mark">共有</span>' : '';
         const imgMark = (ev.images && ev.images.length>0) ? '<span class="img-mark">📷</span>' : '';
-        chip.innerHTML = `
-          <span class="tag tag-${ev.kind}"></span>
-          <span>${timeStr}${escapeHtml(ev.title)}</span>
-          ${imgMark}${sharedMark}
-        `;
+        let tagStyle = '';
+        if (ev.kind === 'shift' && ev.shiftColor) {
+          tagStyle = `style="background:${ev.shiftColor}"`;
+        }
+        chip.innerHTML = `<span class="tag tag-${ev.kind}" ${tagStyle}></span><span>${timeStr}${escapeHtml(ev.title)}</span>${imgMark}${sharedMark}`;
         eventsCell.appendChild(chip);
       });
     }
     
     row.appendChild(dateCell);
     row.appendChild(eventsCell);
-    row.addEventListener('click', () => openDetail(dateStr));
+    row.addEventListener('click', () => onDayClick(dateStr));
     main.appendChild(row);
     
     cur.setDate(cur.getDate() + 1);
   }
   
-  // 月ラベル更新
   document.getElementById('current-month-label').textContent =
-    `${centerDate.getFullYear()}年 ${centerDate.getMonth()+1}月`;
+    `${currentCenterDate.getFullYear()}年 ${currentCenterDate.getMonth()+1}月`;
   
-  // 今日の行までスクロール
-  setTimeout(() => {
-    const todayRow = main.querySelector(`[data-date="${today}"]`);
-    if (todayRow) {
-      todayRow.scrollIntoView({ block: 'start', behavior: 'instant' });
-      window.scrollBy(0, -100); // ヘッダー分オフセット
-    }
-  }, 0);
+  if (!selectedDate) {
+    setTimeout(() => {
+      const todayRow = main.querySelector(`[data-date="${today}"]`);
+      if (todayRow) {
+        todayRow.scrollIntoView({ block: 'start', behavior: 'instant' });
+        window.scrollBy(0, -100);
+      }
+    }, 0);
+  }
 }
 
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, c => ({
-    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-  }[c]));
+function onDayClick(dateStr) {
+  if (selectedDate === dateStr) {
+    openDetail(dateStr);
+    selectedDate = null;
+    updateQuickBar();
+    renderCalendar();
+  } else {
+    selectedDate = dateStr;
+    updateQuickBar();
+    renderCalendar();
+  }
 }
 
-// ============================================================
-// 詳細モーダル
-// ============================================================
+function renderQuickBar() {
+  const buttons = document.getElementById('quick-buttons');
+  buttons.innerHTML = '';
+  state.shifts.forEach(sh => {
+    const btn = document.createElement('button');
+    btn.className = 'quick-btn';
+    const timeStr = sh.start ? ` ${sh.start}〜` : '';
+    btn.innerHTML = `<span class="swatch" style="background:${sh.color}"></span>${escapeHtml(sh.name)}${timeStr}`;
+    btn.onclick = () => applyShift(sh.id);
+    buttons.appendChild(btn);
+  });
+  const misc = document.createElement('button');
+  misc.className = 'quick-btn misc';
+  misc.textContent = 'その他＋';
+  misc.onclick = () => {
+    if (!selectedDate) { alert('先に日付をタップしてください'); return; }
+    openEdit(null, selectedDate);
+  };
+  buttons.appendChild(misc);
+}
+function updateQuickBar() {
+  const t = document.getElementById('quick-target');
+  if (selectedDate) {
+    const d = parseYmd(selectedDate);
+    t.textContent = `${d.getMonth()+1}月${d.getDate()}日(${DOW[d.getDay()]}) に追加`;
+    t.classList.add('active');
+  } else {
+    t.textContent = '日付をタップしてシフトを選択';
+    t.classList.remove('active');
+  }
+}
+function applyShift(shiftId) {
+  if (!selectedDate) { alert('先に日付をタップしてください'); return; }
+  const sh = state.shifts.find(s => s.id === shiftId);
+  if (!sh) return;
+  const dup = state.events.find(e => e.date === selectedDate && e.kind === 'shift' && e.title === sh.name);
+  if (dup) {
+    if (!confirm(`${selectedDate} には既に「${sh.name}」があります。さらに追加しますか?`)) return;
+  }
+  state.events.push({
+    id: uid(),
+    title: sh.name,
+    date: selectedDate,
+    time: sh.start || '',
+    note: sh.start && sh.end ? `${sh.start}〜${sh.end}` : '',
+    kind: 'shift',
+    shared: !!sh.shared,
+    shiftColor: sh.color,
+    images: [],
+    done: false,
+    createdAt: Date.now()
+  });
+  saveData(state);
+  renderCalendar();
+}
+
 function openDetail(dateStr) {
   const modal = document.getElementById('detail-modal');
   const list = document.getElementById('detail-list');
   const label = document.getElementById('detail-date-label');
-  
   const d = parseYmd(dateStr);
   label.textContent = `${d.getMonth()+1}月${d.getDate()}日(${DOW[d.getDay()]})`;
   
@@ -558,13 +907,15 @@ function openDetail(dateStr) {
       const timeStr = ev.time ? ` / ${ev.time}` : '';
       const sharedStr = ev.shared ? ' / 共有中' : '';
       const taskStr = ev.kind==='task' ? (ev.done ? ' / 完了' : ' / 未完了') : '';
+      const dotColor = (ev.kind === 'shift' && ev.shiftColor) ? ev.shiftColor :
+        ({shift:'#34c759',family:'#ff9500',memo:'#5ac8fa',task:'#af52de'}[ev.kind]);
       div.innerHTML = `
-        <span class="tag tag-${ev.kind}" style="margin-top:6px;"></span>
+        <div class="dot" style="background:${dotColor}"></div>
         <div class="body">
-          <div class="title">${escapeHtml(ev.title)}</div>
+          <div class="ttl">${escapeHtml(ev.title)}</div>
           <div class="meta">${kindLabel}${timeStr}${sharedStr}${taskStr}</div>
           ${ev.note ? `<div class="note">${escapeHtml(ev.note)}</div>` : ''}
-          ${ev.images && ev.images.length>0 ? `<div class="imgs">${ev.images.map(src=>`<img src="${src}">`).join('')}</div>` : ''}
+          ${ev.images && ev.images.length>0 ? `<div class="imgs">${ev.images.map((src,i)=>`<img src="${src}" data-event="${ev.id}" data-idx="${i}">`).join('')}</div>` : ''}
           <div class="detail-actions">
             ${ev.kind==='task' ? `<button data-toggle-done="${ev.id}">${ev.done?'未完了に戻す':'完了'}</button>` : ''}
             <button data-edit="${ev.id}">編集</button>
@@ -576,57 +927,41 @@ function openDetail(dateStr) {
     });
   }
   
-  // ボタン処理
   list.querySelectorAll('[data-edit]').forEach(b => {
-    b.addEventListener('click', e => {
-      e.stopPropagation();
-      closeDetail();
-      openEdit(b.dataset.edit);
-    });
+    b.onclick = e => { e.stopPropagation(); closeDetail(); openEdit(b.dataset.edit); };
   });
   list.querySelectorAll('[data-del]').forEach(b => {
-    b.addEventListener('click', e => {
+    b.onclick = e => {
       e.stopPropagation();
       if (confirm('削除しますか?')) {
         state.events = state.events.filter(ev => ev.id !== b.dataset.del);
-        saveData(state);
-        openDetail(dateStr);
-        renderCalendar(currentCenterDate);
+        saveData(state); openDetail(dateStr); renderCalendar();
       }
-    });
+    };
   });
   list.querySelectorAll('[data-toggle-done]').forEach(b => {
-    b.addEventListener('click', e => {
+    b.onclick = e => {
       e.stopPropagation();
       const ev = state.events.find(x => x.id === b.dataset.toggleDone);
-      if (ev) {
-        ev.done = !ev.done;
-        saveData(state);
-        openDetail(dateStr);
-        renderCalendar(currentCenterDate);
-      }
-    });
+      if (ev) { ev.done = !ev.done; saveData(state); openDetail(dateStr); renderCalendar(); }
+    };
+  });
+  list.querySelectorAll('.imgs img').forEach(img => {
+    img.onclick = e => {
+      const ev = state.events.find(x => x.id === img.dataset.event);
+      if (ev) openPhotoViewer(ev.images, parseInt(img.dataset.idx), 'event', ev.id);
+    };
   });
   
-  document.getElementById('detail-add').onclick = () => {
-    closeDetail();
-    openEdit(null, dateStr);
-  };
+  document.getElementById('detail-add').onclick = () => { closeDetail(); openEdit(null, dateStr); };
   document.getElementById('detail-close').onclick = closeDetail;
-  
   modal.classList.add('show');
 }
-function closeDetail() {
-  document.getElementById('detail-modal').classList.remove('show');
-}
+function closeDetail() { document.getElementById('detail-modal').classList.remove('show'); }
 
-// ============================================================
-// 編集モーダル
-// ============================================================
 function openEdit(eventId, defaultDate) {
   const modal = document.getElementById('edit-modal');
   const titleEl = document.getElementById('modal-title');
-  
   if (eventId) {
     const ev = state.events.find(e => e.id === eventId);
     if (!ev) return;
@@ -642,7 +977,7 @@ function openEdit(eventId, defaultDate) {
     document.getElementById('btn-delete').style.display = 'block';
   } else {
     editingId = null;
-    editingKind = 'shift';
+    editingKind = 'family';
     editingShared = false;
     editingImages = [];
     document.getElementById('f-title').value = '';
@@ -652,23 +987,16 @@ function openEdit(eventId, defaultDate) {
     titleEl.textContent = '予定を追加';
     document.getElementById('btn-delete').style.display = 'none';
   }
-  
-  updateKindTabs();
-  updateShareToggle();
-  renderImages();
+  updateKindTabs(); updateShareToggle(); renderImages();
   modal.classList.add('show');
 }
-function closeEdit() {
-  document.getElementById('edit-modal').classList.remove('show');
-}
+function closeEdit() { document.getElementById('edit-modal').classList.remove('show'); }
 function updateKindTabs() {
   document.querySelectorAll('#kind-tabs button').forEach(b => {
     b.classList.toggle('active', b.dataset.kind === editingKind);
   });
 }
-function updateShareToggle() {
-  document.getElementById('share-toggle').classList.toggle('on', editingShared);
-}
+function updateShareToggle() { document.getElementById('share-toggle').classList.toggle('on', editingShared); }
 function renderImages() {
   const area = document.getElementById('image-area');
   area.querySelectorAll('.image-thumb').forEach(n => n.remove());
@@ -676,25 +1004,16 @@ function renderImages() {
     const div = document.createElement('div');
     div.className = 'image-thumb';
     div.innerHTML = `<img src="${src}"><button class="del" data-i="${i}">×</button>`;
-    div.querySelector('.del').addEventListener('click', () => {
-      editingImages.splice(i,1);
-      renderImages();
-    });
+    div.querySelector('.del').onclick = () => { editingImages.splice(i,1); renderImages(); };
     area.insertBefore(div, area.querySelector('.image-add'));
   });
 }
 
 document.querySelectorAll('#kind-tabs button').forEach(b => {
-  b.addEventListener('click', () => {
-    editingKind = b.dataset.kind;
-    updateKindTabs();
-  });
+  b.onclick = () => { editingKind = b.dataset.kind; updateKindTabs(); };
 });
-document.getElementById('share-toggle').addEventListener('click', () => {
-  editingShared = !editingShared;
-  updateShareToggle();
-});
-document.getElementById('f-image').addEventListener('change', async (e) => {
+document.getElementById('share-toggle').onclick = () => { editingShared = !editingShared; updateShareToggle(); };
+document.getElementById('f-image').onchange = async (e) => {
   const files = Array.from(e.target.files || []);
   for (const file of files) {
     const dataUrl = await resizeAndEncode(file, 1024);
@@ -702,7 +1021,7 @@ document.getElementById('f-image').addEventListener('change', async (e) => {
   }
   renderImages();
   e.target.value = '';
-});
+};
 
 function resizeAndEncode(file, maxSize) {
   return new Promise((resolve, reject) => {
@@ -712,13 +1031,8 @@ function resizeAndEncode(file, maxSize) {
       img.onload = () => {
         let { width, height } = img;
         if (width > maxSize || height > maxSize) {
-          if (width > height) {
-            height = Math.round(height * maxSize / width);
-            width = maxSize;
-          } else {
-            width = Math.round(width * maxSize / height);
-            height = maxSize;
-          }
+          if (width > height) { height = Math.round(height * maxSize / width); width = maxSize; }
+          else { width = Math.round(width * maxSize / height); height = maxSize; }
         }
         const canvas = document.createElement('canvas');
         canvas.width = width; canvas.height = height;
@@ -747,71 +1061,308 @@ document.getElementById('btn-save').onclick = () => {
     Object.assign(ev, { title, date, time, note, kind: editingKind, shared: editingShared, images: editingImages });
   } else {
     state.events.push({
-      id: uid(),
-      title, date, time, note,
-      kind: editingKind,
-      shared: editingShared,
-      images: editingImages,
-      done: false,
-      createdAt: Date.now()
+      id: uid(), title, date, time, note,
+      kind: editingKind, shared: editingShared,
+      images: editingImages, done: false, createdAt: Date.now()
     });
   }
-  saveData(state);
-  closeEdit();
-  renderCalendar(currentCenterDate);
+  saveData(state); closeEdit(); renderCalendar();
 };
 document.getElementById('btn-delete').onclick = () => {
   if (!editingId) return;
   if (confirm('この予定を削除しますか?')) {
     state.events = state.events.filter(e => e.id !== editingId);
-    saveData(state);
-    closeEdit();
-    renderCalendar(currentCenterDate);
+    saveData(state); closeEdit(); renderCalendar();
   }
 };
 
-// ============================================================
-// ヘッダー操作
-// ============================================================
-let currentCenterDate = new Date();
 document.getElementById('user-self').onclick = () => {
   viewUser = 'self';
   document.getElementById('user-self').classList.add('active');
   document.getElementById('user-family').classList.remove('active');
-  renderCalendar(currentCenterDate);
+  if (viewMode === 'calendar') renderCalendar(); else renderAlbum();
 };
 document.getElementById('user-family').onclick = () => {
   viewUser = 'family';
   document.getElementById('user-family').classList.add('active');
   document.getElementById('user-self').classList.remove('active');
-  renderCalendar(currentCenterDate);
+  if (viewMode === 'calendar') renderCalendar(); else renderAlbum();
 };
 document.getElementById('jump-today').onclick = () => {
-  currentCenterDate = new Date();
-  renderCalendar(currentCenterDate);
+  currentCenterDate = new Date(); selectedDate = null;
+  updateQuickBar(); renderCalendar();
 };
 document.getElementById('jump-prev').onclick = () => {
   currentCenterDate = new Date(currentCenterDate);
   currentCenterDate.setMonth(currentCenterDate.getMonth() - 1);
-  renderCalendar(currentCenterDate);
+  renderCalendar();
 };
 document.getElementById('jump-next').onclick = () => {
   currentCenterDate = new Date(currentCenterDate);
   currentCenterDate.setMonth(currentCenterDate.getMonth() + 1);
-  renderCalendar(currentCenterDate);
+  renderCalendar();
 };
-document.getElementById('fab').onclick = () => openEdit(null);
 
-// オーバーレイクリックで閉じる
-document.getElementById('edit-modal').addEventListener('click', e => {
-  if (e.target.id === 'edit-modal') closeEdit();
-});
-document.getElementById('detail-modal').addEventListener('click', e => {
-  if (e.target.id === 'detail-modal') closeDetail();
-});
+document.getElementById('tab-cal').onclick = () => switchTab('calendar');
+document.getElementById('tab-album').onclick = () => switchTab('album');
 
-// 初期描画
-renderCalendar(currentCenterDate);
+function switchTab(mode) {
+  viewMode = mode;
+  if (mode === 'calendar') {
+    document.getElementById('calendar-view').style.display = '';
+    document.getElementById('album-view').style.display = 'none';
+    document.getElementById('quick-bar').classList.remove('hidden');
+    document.getElementById('jump-bar').style.display = '';
+    document.getElementById('album-fab').classList.remove('show');
+    document.getElementById('header-title').textContent = '家族カレンダー';
+    document.getElementById('tab-cal').classList.add('active');
+    document.getElementById('tab-album').classList.remove('active');
+    renderCalendar();
+  } else {
+    document.getElementById('calendar-view').style.display = 'none';
+    document.getElementById('album-view').style.display = '';
+    document.getElementById('quick-bar').classList.add('hidden');
+    document.getElementById('jump-bar').style.display = 'none';
+    document.getElementById('album-fab').classList.add('show');
+    document.getElementById('header-title').textContent = 'アルバム';
+    document.getElementById('tab-album').classList.add('active');
+    document.getElementById('tab-cal').classList.remove('active');
+    renderAlbum();
+  }
+}
+
+function renderAlbum() {
+  const grid = document.getElementById('album-grid');
+  const header = document.getElementById('album-header');
+  const photos = state.album.filter(p => viewUser === 'self' || p.shared);
+  
+  header.textContent = viewUser === 'self'
+    ? `${photos.length}枚 / タップで拡大、ビューアから共有切替`
+    : `${photos.length}枚(共有分のみ表示)`;
+  
+  if (photos.length === 0) {
+    grid.innerHTML = '<div class="album-empty" style="grid-column:1/-1;">' +
+      (viewUser === 'self' ? '右下の＋から写真を追加' : '共有された写真はまだありません') +
+      '</div>';
+    return;
+  }
+  
+  photos.sort((a,b) => b.createdAt - a.createdAt);
+  grid.innerHTML = photos.map((p, i) =>
+    `<div class="album-item ${p.shared?'shared':''}" data-id="${p.id}"><img src="${p.src}"></div>`
+  ).join('');
+  
+  grid.querySelectorAll('.album-item').forEach((el, i) => {
+    el.onclick = () => openPhotoViewer(photos.map(p => p.src), i, 'album', null, photos);
+  });
+}
+
+document.getElementById('album-file').onchange = async (e) => {
+  const files = Array.from(e.target.files || []);
+  for (const file of files) {
+    const dataUrl = await resizeAndEncode(file, 1280);
+    state.album.push({
+      id: uid(), src: dataUrl, shared: false, createdAt: Date.now()
+    });
+  }
+  saveData(state); renderAlbum();
+  e.target.value = '';
+};
+
+function openPhotoViewer(srcs, idx, mode, eventId, photoObjs) {
+  viewerImages = srcs; viewerIndex = idx; viewerMode = mode;
+  viewerPhotos = photoObjs || [];
+  document.getElementById('pv-img').src = srcs[idx];
+  document.getElementById('pv-share').style.display = (mode === 'album') ? 'block' : 'none';
+  updateViewerMeta();
+  document.getElementById('photo-viewer').classList.add('show');
+}
+function updateViewerMeta() {
+  const meta = document.getElementById('pv-meta');
+  if (viewerMode === 'album' && viewerPhotos[viewerIndex]) {
+    const p = viewerPhotos[viewerIndex];
+    const d = new Date(p.createdAt);
+    const sharedTxt = p.shared ? ' / 共有中' : ' / 非共有';
+    meta.textContent = `${viewerIndex+1}/${viewerImages.length} | ${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}${sharedTxt}`;
+    document.getElementById('pv-share').textContent = p.shared ? '共有解除' : '共有';
+    document.getElementById('pv-share').classList.toggle('on', p.shared);
+  } else {
+    meta.textContent = `${viewerIndex+1}/${viewerImages.length}`;
+  }
+}
+document.getElementById('pv-close').onclick = () => {
+  document.getElementById('photo-viewer').classList.remove('show');
+};
+document.getElementById('pv-prev').onclick = () => {
+  if (viewerIndex > 0) {
+    viewerIndex--;
+    document.getElementById('pv-img').src = viewerImages[viewerIndex];
+    updateViewerMeta();
+  }
+};
+document.getElementById('pv-next').onclick = () => {
+  if (viewerIndex < viewerImages.length - 1) {
+    viewerIndex++;
+    document.getElementById('pv-img').src = viewerImages[viewerIndex];
+    updateViewerMeta();
+  }
+};
+document.getElementById('pv-share').onclick = () => {
+  if (viewerMode !== 'album') return;
+  const p = viewerPhotos[viewerIndex];
+  if (!p) return;
+  p.shared = !p.shared;
+  saveData(state); updateViewerMeta();
+};
+document.getElementById('pv-delete').onclick = () => {
+  if (viewerMode === 'album') {
+    if (!confirm('この写真を削除しますか?')) return;
+    const p = viewerPhotos[viewerIndex];
+    state.album = state.album.filter(x => x.id !== p.id);
+    saveData(state);
+    document.getElementById('photo-viewer').classList.remove('show');
+    renderAlbum();
+  } else {
+    alert('予定の編集画面から削除してください');
+  }
+};
+
+document.getElementById('open-settings').onclick = () => {
+  renderShiftPatterns();
+  document.getElementById('settings-modal').classList.add('show');
+};
+document.getElementById('settings-close').onclick = () => {
+  document.getElementById('settings-modal').classList.remove('show');
+  renderQuickBar();
+};
+
+function renderShiftPatterns() {
+  const list = document.getElementById('shift-patterns-list');
+  list.innerHTML = '';
+  state.shifts.forEach(sh => {
+    const div = document.createElement('div');
+    div.className = 'shift-list-item';
+    const timeStr = sh.start && sh.end ? `${sh.start} 〜 ${sh.end}` : '時刻なし';
+    const sharedStr = sh.shared ? ' / 共有' : '';
+    div.innerHTML = `
+      <div class="swatch" style="background:${sh.color}"></div>
+      <div class="info">
+        <div>${escapeHtml(sh.name)}</div>
+        <div class="sub">${timeStr}${sharedStr}</div>
+      </div>
+      <div class="actions">
+        <button data-edit="${sh.id}">編集</button>
+      </div>
+    `;
+    list.appendChild(div);
+  });
+  list.querySelectorAll('[data-edit]').forEach(b => {
+    b.onclick = () => openShiftEdit(b.dataset.edit);
+  });
+}
+document.getElementById('add-shift-pattern').onclick = () => openShiftEdit(null);
+
+function openShiftEdit(shiftId) {
+  if (shiftId) {
+    const sh = state.shifts.find(s => s.id === shiftId);
+    if (!sh) return;
+    editingShiftId = sh.id;
+    document.getElementById('sf-name').value = sh.name;
+    document.getElementById('sf-start').value = sh.start || '';
+    document.getElementById('sf-end').value = sh.end || '';
+    document.getElementById('sf-color').value = sh.color;
+    editingShiftShared = !!sh.shared;
+    document.getElementById('shift-edit-title').textContent = 'シフト編集';
+    document.getElementById('sf-delete').style.display = 'block';
+  } else {
+    editingShiftId = null;
+    document.getElementById('sf-name').value = '';
+    document.getElementById('sf-start').value = '';
+    document.getElementById('sf-end').value = '';
+    document.getElementById('sf-color').value = '#34c759';
+    editingShiftShared = true;
+    document.getElementById('shift-edit-title').textContent = 'シフト追加';
+    document.getElementById('sf-delete').style.display = 'none';
+  }
+  document.getElementById('sf-share').classList.toggle('on', editingShiftShared);
+  document.getElementById('shift-edit-modal').classList.add('show');
+}
+document.getElementById('sf-share').onclick = () => {
+  editingShiftShared = !editingShiftShared;
+  document.getElementById('sf-share').classList.toggle('on', editingShiftShared);
+};
+document.getElementById('sf-cancel').onclick = () => {
+  document.getElementById('shift-edit-modal').classList.remove('show');
+};
+document.getElementById('sf-save').onclick = () => {
+  const name = document.getElementById('sf-name').value.trim();
+  const start = document.getElementById('sf-start').value;
+  const end = document.getElementById('sf-end').value;
+  const color = document.getElementById('sf-color').value;
+  if (!name) { alert('名称を入力してください'); return; }
+  
+  if (editingShiftId) {
+    const sh = state.shifts.find(s => s.id === editingShiftId);
+    Object.assign(sh, { name, start, end, color, shared: editingShiftShared });
+  } else {
+    state.shifts.push({ id: uid(), name, start, end, color, shared: editingShiftShared });
+  }
+  saveData(state);
+  document.getElementById('shift-edit-modal').classList.remove('show');
+  renderShiftPatterns();
+};
+document.getElementById('sf-delete').onclick = () => {
+  if (!editingShiftId) return;
+  if (state.shifts.length <= 1) { alert('最低1つは残してください'); return; }
+  if (confirm('このシフトパターンを削除しますか?(過去の予定は残ります)')) {
+    state.shifts = state.shifts.filter(s => s.id !== editingShiftId);
+    saveData(state);
+    document.getElementById('shift-edit-modal').classList.remove('show');
+    renderShiftPatterns();
+  }
+};
+
+document.getElementById('export-data').onclick = () => {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `family-calendar-backup-${ymd(new Date())}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+document.getElementById('import-data').onclick = () => document.getElementById('import-file').click();
+document.getElementById('import-file').onchange = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (!confirm('現在のデータを上書きします。よろしいですか?')) { e.target.value = ''; return; }
+  const text = await file.text();
+  try {
+    const data = JSON.parse(text);
+    state = data;
+    if (!state.shifts) state.shifts = DEFAULT_SHIFTS;
+    if (!state.album) state.album = [];
+    saveData(state);
+    renderShiftPatterns(); renderQuickBar(); renderCalendar();
+    alert('読み込み完了');
+  } catch(err) { alert('読み込み失敗: ' + err.message); }
+  e.target.value = '';
+};
+
+document.getElementById('edit-modal').onclick = e => { if (e.target.id === 'edit-modal') closeEdit(); };
+document.getElementById('detail-modal').onclick = e => { if (e.target.id === 'detail-modal') closeDetail(); };
+document.getElementById('settings-modal').onclick = e => {
+  if (e.target.id === 'settings-modal') {
+    document.getElementById('settings-modal').classList.remove('show');
+    renderQuickBar();
+  }
+};
+document.getElementById('shift-edit-modal').onclick = e => {
+  if (e.target.id === 'shift-edit-modal') document.getElementById('shift-edit-modal').classList.remove('show');
+};
+
+renderQuickBar();
+updateQuickBar();
+renderCalendar();
 </script>
 
 </body>
