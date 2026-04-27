@@ -4,24 +4,39 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="家族カレンダー">
 <title>家族カレンダー</title>
 <style>
 :root {
+  --bg: #000;
+  --row-bg: #0a0a0a;
+  --row-border: #1c1c1e;
+  --text: #fff;
+  --sub: #8e8e93;
+  --accent: #0a84ff;
+  --month-bar: #0a84ff;
+  --field-bg: #1c1c1e;
+  --field-border: #2c2c2e;
+  --weekend-sat: #5ac8fa;
+  --weekend-sun: #ff453a;
+  --today-bg: #1a1a2e;
+}
+body.light {
   --bg: #f5f5f7;
-  --card: #ffffff;
+  --row-bg: #ffffff;
+  --row-border: #e5e5ea;
   --text: #1d1d1f;
   --sub: #86868b;
-  --border: #e5e5ea;
   --accent: #007aff;
-  --shift: #34c759;
-  --family: #ff9500;
-  --memo: #5ac8fa;
-  --task: #af52de;
+  --month-bar: #007aff;
+  --field-bg: #f0f0f3;
+  --field-border: #d1d1d6;
   --weekend-sat: #007aff;
   --weekend-sun: #ff3b30;
+  --today-bg: #fffbe6;
 }
+
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body {
   margin: 0; padding: 0;
@@ -30,305 +45,187 @@ html, body {
   color: var(--text);
   font-size: 16px;
   -webkit-text-size-adjust: 100%;
+  overscroll-behavior-y: none;
 }
 
 header {
   position: sticky; top: 0; z-index: 10;
-  background: rgba(245,245,247,0.92);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  border-bottom: 1px solid var(--row-border);
   padding: env(safe-area-inset-top, 0) 0 0 0;
 }
 .header-inner {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 16px;
+  padding: 10px 16px;
+  gap: 8px;
 }
-.title { font-size: 17px; font-weight: 600; }
-.jump-bar {
-  display: flex; gap: 8px; padding: 10px 16px;
-  background: var(--card);
-  border-bottom: 1px solid var(--border);
-  font-size: 14px;
-  align-items: center;
+.nav-btns {
+  display: flex; gap: 4px;
 }
-.jump-bar button {
-  border: 1px solid var(--border);
-  background: var(--card);
-  padding: 6px 12px; border-radius: 6px;
-  font-size: 13px; cursor: pointer;
+.nav-btn {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: var(--field-bg);
+  color: var(--text);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
 }
-.settings-btn {
-  margin-left: auto;
-  border: none !important;
-  background: transparent !important;
-  font-size: 20px !important;
-  padding: 4px 8px !important;
+.month-label {
+  font-size: 16px; font-weight: 600;
+  flex: 1; text-align: center;
+}
+.right-btns {
+  display: flex; gap: 4px;
+}
+.icon-btn {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: var(--field-bg);
+  color: var(--text);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
 }
 
 main {
-  padding: 0 0 calc(180px + env(safe-area-inset-bottom, 0)) 0;
+  padding: 0 0 calc(80px + env(safe-area-inset-bottom, 0)) 0;
+}
+
+.month-bar {
+  background: var(--month-bar);
+  color: white;
+  font-weight: 600;
+  font-size: 15px;
+  padding: 8px 16px;
+  margin-top: 0;
 }
 
 .day-row {
   display: grid;
-  grid-template-columns: 64px 1fr;
-  background: var(--card);
-  border-bottom: 1px solid var(--border);
+  grid-template-columns: 44px 78px 78px 1fr;
+  background: var(--row-bg);
+  border-bottom: 1px solid var(--row-border);
   min-height: 56px;
-  cursor: pointer;
-  transition: background 0.1s;
-  position: relative;
+  align-items: stretch;
+  gap: 6px;
+  padding: 6px 12px 6px 0;
 }
-.day-row:active { background: #f0f0f3; }
-.day-row.today { background: #fffbe6; }
-.day-row.selected {
-  background: #e3f2fd !important;
-  box-shadow: inset 4px 0 0 var(--accent);
-}
-.day-row.month-start {
-  border-top: 8px solid var(--bg);
-}
-.day-row.month-start::before {
-  content: attr(data-month);
-  position: absolute;
-  top: -28px; left: 16px;
-  font-size: 13px; font-weight: 600; color: var(--sub);
-  background: var(--bg); padding: 4px 0;
-}
+.day-row.today { background: var(--today-bg); }
+
 .date-cell {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  padding: 8px 4px;
-  border-right: 1px solid var(--border);
+  padding: 4px 0;
 }
-.date-num { font-size: 22px; font-weight: 600; line-height: 1; }
+.date-num { font-size: 22px; font-weight: 600; line-height: 1.1; }
 .date-dow { font-size: 11px; color: var(--sub); margin-top: 2px; }
 .date-cell.sat .date-dow, .date-cell.sat .date-num { color: var(--weekend-sat); }
 .date-cell.sun .date-dow, .date-cell.sun .date-num { color: var(--weekend-sun); }
+.date-cell.holiday .date-dow, .date-cell.holiday .date-num { color: var(--weekend-sun); }
 
-.events-cell {
-  padding: 8px 12px;
-  display: flex; flex-direction: column; gap: 4px;
+/* シフト枠(ハイブリッド: select風 + 自由入力) */
+.shift-cell {
+  display: flex;
+  align-items: center;
+}
+.shift-input {
+  width: 100%;
+  height: 38px;
+  padding: 4px 8px;
+  border: 1px solid var(--field-border);
+  background: var(--field-bg);
+  color: var(--text);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  text-align: center;
+  outline: none;
+}
+.shift-input:focus {
+  border-color: var(--accent);
+}
+.shift-input::placeholder {
+  color: var(--sub);
+}
+.shift-input.has-value {
+  font-weight: 600;
+}
+
+/* 予定欄(自由入力) */
+.event-cell {
+  display: flex; align-items: center;
   min-width: 0;
 }
-.event-chip {
-  display: flex; align-items: center; gap: 6px;
-  font-size: 14px; line-height: 1.3;
-  padding: 4px 8px;
-  border-radius: 6px;
-  background: #f0f0f3;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-.event-chip .tag {
-  display: inline-block;
-  width: 8px; height: 8px; border-radius: 50%;
-  flex-shrink: 0;
-}
-.tag-shift { background: var(--shift); }
-.tag-family { background: var(--family); }
-.tag-memo { background: var(--memo); }
-.tag-task { background: var(--task); }
-.event-chip .img-mark {
-  font-size: 11px; flex-shrink: 0;
-  margin-left: auto;
-}
-.event-chip.task-done {
-  text-decoration: line-through;
-  color: var(--sub);
-}
-.empty-row { color: var(--sub); font-size: 13px; padding: 4px 0; }
-
-.quick-bar {
-  position: fixed;
-  bottom: calc(56px + env(safe-area-inset-bottom, 0));
-  left: 0; right: 0;
-  background: rgba(255,255,255,0.96);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-top: 1px solid var(--border);
-  padding: 10px 12px;
-  z-index: 8;
-  display: flex; flex-direction: column; gap: 8px;
-}
-.quick-bar.hidden { display: none; }
-.quick-target {
-  font-size: 12px; color: var(--sub); text-align: center;
-  min-height: 16px;
-}
-.quick-target.active {
-  color: var(--accent); font-weight: 600;
-}
-.quick-row {
-  display: grid;
-  grid-template-columns: 1fr auto auto;
-  gap: 8px;
-}
-.shift-select-wrap {
-  position: relative;
-}
-.shift-select {
+.event-input {
   width: 100%;
-  padding: 10px 36px 10px 14px;
-  border: 1px solid var(--border);
-  background: var(--card);
-  border-radius: 10px;
-  font-size: 15px; font-weight: 500;
-  font-family: inherit;
-  appearance: none;
-  -webkit-appearance: none;
-  cursor: pointer;
-  min-height: 44px;
+  height: 38px;
+  padding: 4px 10px;
+  border: 1px solid transparent;
+  background: transparent;
   color: var(--text);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
 }
-.shift-select:disabled {
-  background: var(--bg);
+.event-input:focus {
+  border-color: var(--field-border);
+  background: var(--field-bg);
+}
+.event-input::placeholder {
   color: var(--sub);
-  cursor: not-allowed;
-}
-.shift-select-wrap::after {
-  content: '▼';
-  position: absolute;
-  right: 14px; top: 50%; transform: translateY(-50%);
-  font-size: 10px; color: var(--sub);
-  pointer-events: none;
-}
-.shift-apply-btn {
-  padding: 10px 18px;
-  background: var(--accent); color: white;
-  border: none; border-radius: 10px;
-  font-size: 14px; font-weight: 600;
-  cursor: pointer;
-  min-height: 44px;
-}
-.shift-apply-btn:disabled {
-  background: var(--border); color: var(--sub);
-  cursor: not-allowed;
-}
-.misc-btn {
-  padding: 10px 14px;
-  background: var(--card);
-  color: var(--accent);
-  border: 1px solid var(--accent);
-  border-radius: 10px;
-  font-size: 14px; font-weight: 600;
-  cursor: pointer;
-  min-height: 44px;
-}
-.misc-btn:disabled {
-  border-color: var(--border);
-  color: var(--sub);
-  cursor: not-allowed;
+  opacity: 0.6;
 }
 
-.tab-bar {
+/* === ドロップダウン === */
+.dropdown {
   position: fixed;
-  bottom: 0; left: 0; right: 0;
-  background: rgba(255,255,255,0.96);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-top: 1px solid var(--border);
-  display: flex;
-  padding-bottom: env(safe-area-inset-bottom, 0);
-  z-index: 9;
-}
-.tab-bar button {
-  flex: 1;
-  border: none; background: transparent;
-  padding: 8px 4px;
-  font-size: 11px;
-  color: var(--sub);
-  cursor: pointer;
-  display: flex; flex-direction: column; align-items: center; gap: 2px;
-}
-.tab-bar button .ico { font-size: 22px; }
-.tab-bar button.active { color: var(--accent); }
-
-.album-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 2px;
-  padding: 0;
-}
-.album-item {
-  position: relative;
-  aspect-ratio: 1;
-  background: var(--border);
-  cursor: pointer;
-  overflow: hidden;
-}
-.album-item img {
-  width: 100%; height: 100%; object-fit: cover;
-}
-.album-empty {
-  text-align: center; padding: 60px 20px;
-  color: var(--sub);
-}
-.album-header {
-  padding: 12px 16px;
-  background: var(--card);
-  border-bottom: 1px solid var(--border);
-  font-size: 13px; color: var(--sub);
-}
-
-.photo-viewer {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.95);
+  background: var(--row-bg);
+  border: 1px solid var(--field-border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  z-index: 100;
+  min-width: 140px;
+  max-height: 60vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   display: none;
-  align-items: center; justify-content: center;
-  z-index: 200;
-  padding: 20px;
 }
-.photo-viewer.show { display: flex; }
-.photo-viewer img {
-  max-width: 100%; max-height: 75vh;
-  object-fit: contain;
-}
-.photo-viewer .controls {
-  position: absolute;
-  bottom: calc(20px + env(safe-area-inset-bottom, 0));
-  left: 0; right: 0;
-  display: flex; justify-content: center; gap: 12px;
-  flex-wrap: wrap;
-  padding: 0 20px;
-}
-.photo-viewer .controls button {
-  background: rgba(255,255,255,0.2);
-  color: white; border: none;
-  padding: 10px 16px; border-radius: 8px;
-  font-size: 13px; cursor: pointer;
-}
-.photo-viewer .close-btn {
-  position: absolute;
-  top: calc(20px + env(safe-area-inset-top, 0));
-  right: 20px;
-  background: rgba(255,255,255,0.2);
-  color: white; border: none;
-  width: 40px; height: 40px;
-  border-radius: 50%; font-size: 20px;
+.dropdown.show { display: block; }
+.dropdown-item {
+  padding: 12px 16px;
+  font-size: 15px;
+  color: var(--text);
   cursor: pointer;
+  border-bottom: 1px solid var(--row-border);
+  display: flex; align-items: center; gap: 8px;
 }
-.photo-viewer .meta {
-  position: absolute;
-  top: calc(20px + env(safe-area-inset-top, 0));
-  left: 20px;
-  color: white; font-size: 13px;
-  background: rgba(0,0,0,0.4);
-  padding: 6px 10px; border-radius: 6px;
+.dropdown-item:last-child { border-bottom: none; }
+.dropdown-item:active { background: var(--field-bg); }
+.dropdown-item.selected::before {
+  content: '✓';
+  color: var(--accent);
+  margin-right: 4px;
+}
+.dropdown-item.clear-item {
+  color: var(--sub);
+  font-style: italic;
 }
 
+/* === 設定モーダル === */
 .modal-overlay {
   position: fixed; inset: 0;
-  background: rgba(0,0,0,0.4);
+  background: rgba(0,0,0,0.6);
   display: none;
-  z-index: 100;
+  z-index: 200;
   align-items: flex-end;
   justify-content: center;
 }
 .modal-overlay.show { display: flex; }
 .modal {
-  background: var(--card);
+  background: var(--row-bg);
   width: 100%;
   max-width: 540px;
   border-radius: 16px 16px 0 0;
@@ -336,942 +233,537 @@ main {
   max-height: 85vh;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  border-top: 1px solid var(--field-border);
 }
-.modal h2 { margin: 0 0 16px 0; font-size: 18px; }
+.modal h2 { margin: 0 0 16px 0; font-size: 18px; color: var(--text); }
 .modal h3 { margin: 16px 0 8px 0; font-size: 14px; color: var(--sub); }
-.field { margin-bottom: 14px; }
-.field label {
-  display: block; font-size: 13px; color: var(--sub); margin-bottom: 6px; font-weight: 500;
-}
-.field input[type="text"],
-.field input[type="date"],
-.field input[type="time"],
-.field input[type="color"],
-.field textarea,
-.field select {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  font-size: 16px;
-  background: var(--bg);
-  font-family: inherit;
-}
-.field textarea { min-height: 80px; resize: vertical; }
-.field input[type="color"] { padding: 4px; height: 44px; }
-.row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.kind-tabs {
-  display: flex; gap: 6px; margin-bottom: 14px;
-}
-.kind-tabs button {
-  flex: 1;
-  padding: 10px 4px;
-  border: 1px solid var(--border);
-  background: var(--bg);
-  border-radius: 8px;
-  font-size: 13px; font-weight: 500;
-  cursor: pointer;
-  color: var(--sub);
-}
-.kind-tabs button.active {
-  background: var(--accent); color: white; border-color: var(--accent);
-}
-.image-area {
-  display: flex; gap: 8px; flex-wrap: wrap;
+
+.theme-toggle {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px; background: var(--field-bg); border-radius: 8px;
   margin-bottom: 14px;
 }
-.image-thumb {
-  position: relative;
-  width: 80px; height: 80px;
-  border-radius: 8px; overflow: hidden;
-  border: 1px solid var(--border);
+.theme-toggle .label { font-size: 14px; color: var(--text); }
+.toggle-switch {
+  position: relative; width: 50px; height: 30px;
+  background: #555; border-radius: 15px;
+  cursor: pointer; transition: background 0.2s;
+  flex-shrink: 0;
 }
-.image-thumb img { width: 100%; height: 100%; object-fit: cover; }
-.image-thumb .del {
-  position: absolute; top: 2px; right: 2px;
-  background: rgba(0,0,0,0.6); color: white;
-  border: none; width: 22px; height: 22px;
-  border-radius: 50%; font-size: 12px; cursor: pointer;
+.toggle-switch.on { background: #34c759; }
+.toggle-switch::after {
+  content: ''; position: absolute; top: 2px; left: 2px;
+  width: 26px; height: 26px; background: white; border-radius: 50%;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
-.image-add {
-  width: 80px; height: 80px;
-  border: 2px dashed var(--border); border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 28px; color: var(--sub);
-  cursor: pointer; background: var(--bg);
+.toggle-switch.on::after { transform: translateX(20px); }
+
+.shift-pattern-section {
+  margin-bottom: 16px;
 }
-.image-add input { display: none; }
+.shift-pattern-section .section-title {
+  font-size: 13px; font-weight: 600; color: var(--sub);
+  margin-bottom: 8px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.shift-pattern-section input[type="text"] {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--field-border);
+  background: var(--field-bg);
+  color: var(--text);
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  margin-bottom: 6px;
+}
+.shift-pattern-list {
+  display: flex; flex-direction: column; gap: 4px;
+}
+.shift-pattern-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px;
+  align-items: center;
+}
+.shift-pattern-item input {
+  margin: 0 !important;
+}
+.shift-pattern-item .del-pattern {
+  background: transparent; border: none;
+  color: #ff453a; cursor: pointer;
+  padding: 4px 8px; font-size: 18px;
+}
+.add-pattern-btn {
+  width: 100%; padding: 8px;
+  border: 1px dashed var(--field-border);
+  background: transparent; border-radius: 6px;
+  color: var(--accent); font-size: 13px;
+  cursor: pointer; margin-top: 4px;
+}
+
 .modal-actions {
-  display: flex; gap: 10px; margin-top: 8px;
+  display: flex; gap: 10px; margin-top: 16px;
 }
 .modal-actions button {
   flex: 1; padding: 12px; border-radius: 10px;
   font-size: 15px; font-weight: 600; border: none;
   cursor: pointer;
 }
-.btn-cancel { background: var(--bg); color: var(--text); }
+.btn-cancel { background: var(--field-bg); color: var(--text); }
 .btn-save { background: var(--accent); color: white; }
-.btn-delete { background: #ff3b30; color: white; }
 
-.detail-event {
-  display: flex; align-items: flex-start; gap: 10px;
-  padding: 12px; background: var(--bg);
-  border-radius: 10px; margin-bottom: 10px;
+.data-buttons {
+  display: flex; gap: 8px;
 }
-.detail-event .body { flex: 1; min-width: 0; }
-.detail-event .ttl { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
-.detail-event .meta { font-size: 12px; color: var(--sub); }
-.detail-event .note { font-size: 13px; color: var(--text); margin-top: 6px; white-space: pre-wrap; }
-.detail-event .imgs { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
-.detail-event .imgs img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; cursor:pointer; }
-.detail-actions { display: flex; gap: 6px; margin-top: 8px; }
-.detail-actions button {
-  border: none; background: transparent; padding: 4px 8px;
-  font-size: 12px; color: var(--accent); cursor: pointer;
-}
-.detail-actions .del-btn { color: #ff3b30; }
-.detail-event .dot {
-  margin-top: 8px; width: 10px; height: 10px;
-  border-radius: 50%; flex-shrink: 0;
+.data-buttons button {
+  flex: 1; padding: 10px;
+  background: var(--field-bg); color: var(--text);
+  border: none; border-radius: 8px;
+  font-size: 13px; cursor: pointer;
 }
 
-.shift-list-item {
-  display: grid;
-  grid-template-columns: 24px 1fr auto;
-  gap: 10px; align-items: center;
-  padding: 10px; background: var(--bg);
-  border-radius: 8px; margin-bottom: 8px;
-}
-.shift-list-item .swatch {
-  width: 24px; height: 24px; border-radius: 50%;
-}
-.shift-list-item .info {
-  font-size: 14px; min-width: 0;
-}
-.shift-list-item .info .sub {
-  font-size: 11px; color: var(--sub);
-}
-.shift-list-item .actions {
-  display: flex; gap: 4px;
-}
-.shift-list-item .actions button {
-  border: none; background: transparent;
-  padding: 4px 8px; font-size: 12px;
-  color: var(--accent); cursor: pointer;
-}
-.add-shift-btn {
-  width: 100%; padding: 10px;
-  border: 1px dashed var(--border);
-  background: transparent; border-radius: 8px;
-  color: var(--accent); font-size: 14px;
-  cursor: pointer; margin-top: 8px;
-}
-
-.album-fab {
-  position: fixed;
-  right: 20px;
-  bottom: calc(70px + env(safe-area-inset-bottom, 0));
-  width: 56px; height: 56px;
-  border-radius: 50%;
-  background: var(--accent);
-  color: white; font-size: 28px;
-  border: none;
-  box-shadow: 0 4px 16px rgba(0,122,255,0.4);
-  cursor: pointer;
-  z-index: 5;
-  display: none;
-  align-items: center; justify-content: center;
-}
-.album-fab.show { display: flex; }
-.album-fab input { display: none; }
 </style>
 </head>
 <body>
 
 <header>
   <div class="header-inner">
-    <div class="title" id="header-title">家族カレンダー</div>
-  </div>
-  <div class="jump-bar" id="jump-bar">
-    <button id="jump-today">今日</button>
-    <button id="jump-prev">◀</button>
-    <button id="jump-next">▶</button>
-    <span id="current-month-label" style="margin-left:8px;align-self:center;color:var(--sub);font-size:13px;"></span>
-    <button class="settings-btn" id="open-settings">⚙</button>
+    <div class="nav-btns">
+      <button class="nav-btn" id="nav-prev">‹</button>
+      <button class="nav-btn" id="nav-next">›</button>
+    </div>
+    <div class="month-label" id="month-label">2026年4月</div>
+    <div class="right-btns">
+      <button class="icon-btn" id="nav-today" title="今日">📍</button>
+      <button class="icon-btn" id="open-settings" title="設定">⚙</button>
+    </div>
   </div>
 </header>
 
-<main id="calendar-view">
-  <div id="calendar-list"></div>
-</main>
+<main id="calendar-list"></main>
 
-<main id="album-view" style="display:none;">
-  <div class="album-header" id="album-header"></div>
-  <div class="album-grid" id="album-grid"></div>
-</main>
+<!-- ドロップダウン -->
+<div class="dropdown" id="dropdown"></div>
 
-<label class="album-fab" id="album-fab">
-  ＋
-  <input type="file" id="album-file" accept="image/*" multiple>
-</label>
-
-<div class="quick-bar" id="quick-bar">
-  <div class="quick-target" id="quick-target">日付をタップして追加</div>
-  <div class="quick-row">
-    <div class="shift-select-wrap">
-      <select class="shift-select" id="shift-select" disabled>
-        <option value="">シフトを選択...</option>
-      </select>
-    </div>
-    <button class="shift-apply-btn" id="shift-apply" disabled>追加</button>
-    <button class="misc-btn" id="misc-btn" disabled>その他</button>
-  </div>
-</div>
-
-<nav class="tab-bar">
-  <button id="tab-cal" class="active">
-    <span class="ico">📅</span><span>カレンダー</span>
-  </button>
-  <button id="tab-album">
-    <span class="ico">📷</span><span>アルバム</span>
-  </button>
-</nav>
-
-<div class="modal-overlay" id="edit-modal">
-  <div class="modal">
-    <h2 id="modal-title">予定を追加</h2>
-    <div class="kind-tabs" id="kind-tabs">
-      <button data-kind="shift" class="active">シフト</button>
-      <button data-kind="family">家族予定</button>
-      <button data-kind="memo">メモ</button>
-      <button data-kind="task">タスク</button>
-    </div>
-    <div class="field">
-      <label>タイトル</label>
-      <input type="text" id="f-title" placeholder="例: 通院 / 買い物">
-    </div>
-    <div class="row-2">
-      <div class="field">
-        <label>日付</label>
-        <input type="date" id="f-date">
-      </div>
-      <div class="field">
-        <label>時刻(任意)</label>
-        <input type="time" id="f-time">
-      </div>
-    </div>
-    <div class="field">
-      <label>メモ</label>
-      <textarea id="f-note" placeholder="詳細"></textarea>
-    </div>
-    <div class="image-area" id="image-area">
-      <label class="image-add">
-        ＋
-        <input type="file" id="f-image" accept="image/*" multiple>
-      </label>
-    </div>
-    <div class="modal-actions">
-      <button class="btn-cancel" id="btn-cancel">キャンセル</button>
-      <button class="btn-delete" id="btn-delete" style="display:none;">削除</button>
-      <button class="btn-save" id="btn-save">保存</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="detail-modal">
-  <div class="modal">
-    <h2 id="detail-date-label"></h2>
-    <div id="detail-list"></div>
-    <div class="modal-actions">
-      <button class="btn-cancel" id="detail-close">閉じる</button>
-      <button class="btn-save" id="detail-add">この日に追加</button>
-    </div>
-  </div>
-</div>
-
+<!-- 設定モーダル -->
 <div class="modal-overlay" id="settings-modal">
   <div class="modal">
     <h2>設定</h2>
-    <h3>シフトパターン</h3>
-    <div id="shift-patterns-list"></div>
-    <button class="add-shift-btn" id="add-shift-pattern">＋ シフトを追加</button>
-    
+
+    <div class="theme-toggle">
+      <span class="label">ライトテーマ</span>
+      <div class="toggle-switch" id="theme-toggle"></div>
+    </div>
+
+    <div class="shift-pattern-section">
+      <div class="section-title">
+        <span>自分のシフト候補</span>
+      </div>
+      <div class="shift-pattern-list" id="self-patterns"></div>
+      <button class="add-pattern-btn" data-target="self">＋ 追加</button>
+    </div>
+
+    <div class="shift-pattern-section">
+      <div class="section-title">
+        <span>妻のシフト候補</span>
+      </div>
+      <div class="shift-pattern-list" id="wife-patterns"></div>
+      <button class="add-pattern-btn" data-target="wife">＋ 追加</button>
+    </div>
+
     <h3>データ管理</h3>
-    <div class="modal-actions" style="margin-bottom:8px;">
-      <button class="btn-cancel" id="export-data">バックアップ</button>
-      <button class="btn-cancel" id="import-data">読み込み</button>
+    <div class="data-buttons">
+      <button id="export-data">バックアップ</button>
+      <button id="import-data">読み込み</button>
     </div>
     <input type="file" id="import-file" accept=".json" style="display:none;">
-    
-    <div class="modal-actions" style="margin-top:24px;">
-      <button class="btn-cancel" id="settings-close">閉じる</button>
-    </div>
-  </div>
-</div>
 
-<div class="modal-overlay" id="shift-edit-modal">
-  <div class="modal">
-    <h2 id="shift-edit-title">シフト編集</h2>
-    <div class="field">
-      <label>名称</label>
-      <input type="text" id="sf-name" placeholder="例: 早番">
-    </div>
-    <div class="row-2">
-      <div class="field">
-        <label>開始時刻(任意)</label>
-        <input type="time" id="sf-start">
-      </div>
-      <div class="field">
-        <label>終了時刻(任意)</label>
-        <input type="time" id="sf-end">
-      </div>
-    </div>
-    <div class="field">
-      <label>カラー</label>
-      <input type="color" id="sf-color" value="#34c759">
-    </div>
     <div class="modal-actions">
-      <button class="btn-cancel" id="sf-cancel">キャンセル</button>
-      <button class="btn-delete" id="sf-delete" style="display:none;">削除</button>
-      <button class="btn-save" id="sf-save">保存</button>
+      <button class="btn-save" id="settings-close">閉じる</button>
     </div>
-  </div>
-</div>
-
-<div class="photo-viewer" id="photo-viewer">
-  <button class="close-btn" id="pv-close">×</button>
-  <div class="meta" id="pv-meta"></div>
-  <img id="pv-img">
-  <div class="controls">
-    <button id="pv-prev">◀</button>
-    <button id="pv-delete">削除</button>
-    <button id="pv-next">▶</button>
   </div>
 </div>
 
 <script>
-const STORAGE_KEY = 'family-calendar-v3';
+const STORAGE_KEY = 'family-calendar-v4';
 
-const DEFAULT_SHIFTS = [
-  { id: 'sh-asa',  name: '早番', start: '06:00', end: '14:30', color: '#34c759' },
-  { id: 'sh-oso',  name: '遅番', start: '13:00', end: '22:00', color: '#ff9500' },
-  { id: 'sh-ake',  name: '明け', start: '',      end: '',      color: '#5ac8fa' },
-  { id: 'sh-yasu', name: '公休', start: '',      end: '',      color: '#af52de' }
-];
+const DEFAULT_DATA = {
+  // 日付ごとのレコード: { 'YYYY-MM-DD': { selfShift: '早番', wifeShift: 'A', event: '通院 14:00' } }
+  records: {},
+  selfPatterns: ['早番', '遅番', '明け', '公休', '年休'],
+  wifePatterns: ['A', 'B', 'C', 'D', '休'],
+  theme: 'dark'
+};
 
 function loadData() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { events: [], shifts: DEFAULT_SHIFTS, album: [] };
+    if (!raw) return JSON.parse(JSON.stringify(DEFAULT_DATA));
     const d = JSON.parse(raw);
-    if (!d.shifts) d.shifts = DEFAULT_SHIFTS;
-    if (!d.album) d.album = [];
+    if (!d.records) d.records = {};
+    if (!d.selfPatterns) d.selfPatterns = DEFAULT_DATA.selfPatterns;
+    if (!d.wifePatterns) d.wifePatterns = DEFAULT_DATA.wifePatterns;
+    if (!d.theme) d.theme = 'dark';
     return d;
   } catch(e) {
-    return { events: [], shifts: DEFAULT_SHIFTS, album: [] };
+    return JSON.parse(JSON.stringify(DEFAULT_DATA));
   }
 }
-function saveData(data) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
-  catch(e) { alert('保存に失敗(容量超過の可能性): ' + e.message); }
+function saveData() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  catch(e) { alert('保存失敗(容量超過の可能性): ' + e.message); }
 }
 
 let state = loadData();
-let viewMode = 'calendar';
-let selectedDate = null;
-let editingId = null;
-let editingKind = 'shift';
-let editingImages = [];
-let editingShiftId = null;
-let viewerImages = [];
-let viewerIndex = 0;
-let viewerMode = 'album';
-let viewerPhotos = [];
 let currentCenterDate = new Date();
+let activeDropdown = null; // { dateStr, field, inputEl }
 
-function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 function ymd(d) {
   const y = d.getFullYear();
   const m = String(d.getMonth()+1).padStart(2,'0');
   const day = String(d.getDate()).padStart(2,'0');
   return `${y}-${m}-${day}`;
 }
-function parseYmd(s) { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); }
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
 const DOW = ['日','月','火','水','木','金','土'];
 
+function getRecord(dateStr) {
+  return state.records[dateStr] || { selfShift: '', wifeShift: '', event: '' };
+}
+function setRecordField(dateStr, field, value) {
+  if (!state.records[dateStr]) state.records[dateStr] = { selfShift: '', wifeShift: '', event: '' };
+  state.records[dateStr][field] = value;
+  // 全フィールド空ならレコード自体削除(localStorageを軽く保つ)
+  const r = state.records[dateStr];
+  if (!r.selfShift && !r.wifeShift && !r.event) {
+    delete state.records[dateStr];
+  }
+  saveData();
+}
+
+function applyTheme() {
+  if (state.theme === 'light') document.body.classList.add('light');
+  else document.body.classList.remove('light');
+}
+applyTheme();
+
 function renderCalendar() {
   const main = document.getElementById('calendar-list');
   main.innerHTML = '';
+
+  // 表示範囲: 中心月の前月〜次月(3ヶ月)
   const start = new Date(currentCenterDate);
   start.setDate(1);
   start.setMonth(start.getMonth() - 1);
   const end = new Date(currentCenterDate);
   end.setDate(1);
   end.setMonth(end.getMonth() + 2);
-  
+
   const today = ymd(new Date());
-  const eventsByDate = {};
-  state.events.forEach(ev => {
-    if (!eventsByDate[ev.date]) eventsByDate[ev.date] = [];
-    eventsByDate[ev.date].push(ev);
-  });
-  
   let lastMonth = -1;
   const cur = new Date(start);
+
   while (cur < end) {
-    const dateStr = ymd(cur);
-    const dow = cur.getDay();
     const m = cur.getMonth();
-    
-    const row = document.createElement('div');
-    row.className = 'day-row';
     if (m !== lastMonth) {
-      row.classList.add('month-start');
-      row.dataset.month = `${cur.getFullYear()}年 ${m+1}月`;
+      const bar = document.createElement('div');
+      bar.className = 'month-bar';
+      bar.textContent = `${cur.getFullYear()}年 ${m+1}月`;
+      main.appendChild(bar);
       lastMonth = m;
     }
+
+    const dateStr = ymd(cur);
+    const dow = cur.getDay();
+    const rec = getRecord(dateStr);
+
+    const row = document.createElement('div');
+    row.className = 'day-row';
     if (dateStr === today) row.classList.add('today');
-    if (dateStr === selectedDate) row.classList.add('selected');
     row.dataset.date = dateStr;
-    
+
     const dateCell = document.createElement('div');
     dateCell.className = 'date-cell';
     if (dow === 0) dateCell.classList.add('sun');
     if (dow === 6) dateCell.classList.add('sat');
     dateCell.innerHTML = `<div class="date-num">${cur.getDate()}</div><div class="date-dow">${DOW[dow]}</div>`;
-    
-    const eventsCell = document.createElement('div');
-    eventsCell.className = 'events-cell';
-    const evs = eventsByDate[dateStr] || [];
-    if (evs.length === 0) {
-      eventsCell.innerHTML = '<div class="empty-row">—</div>';
-    } else {
-      evs.sort((a,b) => (a.time||'99') > (b.time||'99') ? 1 : -1);
-      evs.forEach(ev => {
-        const chip = document.createElement('div');
-        chip.className = 'event-chip';
-        if (ev.kind === 'task' && ev.done) chip.classList.add('task-done');
-        const timeStr = ev.time ? `${ev.time} ` : '';
-        const imgMark = (ev.images && ev.images.length>0) ? '<span class="img-mark">📷</span>' : '';
-        let tagStyle = '';
-        if (ev.kind === 'shift' && ev.shiftColor) {
-          tagStyle = `style="background:${ev.shiftColor}"`;
-        }
-        chip.innerHTML = `<span class="tag tag-${ev.kind}" ${tagStyle}></span><span>${timeStr}${escapeHtml(ev.title)}</span>${imgMark}`;
-        eventsCell.appendChild(chip);
-      });
-    }
-    
+
+    // 自分シフト枠
+    const selfCell = document.createElement('div');
+    selfCell.className = 'shift-cell';
+    const selfInput = document.createElement('input');
+    selfInput.type = 'text';
+    selfInput.className = 'shift-input';
+    selfInput.placeholder = '自分';
+    selfInput.maxLength = 15;
+    selfInput.value = rec.selfShift || '';
+    if (rec.selfShift) selfInput.classList.add('has-value');
+    selfInput.dataset.date = dateStr;
+    selfInput.dataset.field = 'selfShift';
+    bindShiftInput(selfInput, 'self');
+    selfCell.appendChild(selfInput);
+
+    // 妻シフト枠
+    const wifeCell = document.createElement('div');
+    wifeCell.className = 'shift-cell';
+    const wifeInput = document.createElement('input');
+    wifeInput.type = 'text';
+    wifeInput.className = 'shift-input';
+    wifeInput.placeholder = '妻';
+    wifeInput.maxLength = 15;
+    wifeInput.value = rec.wifeShift || '';
+    if (rec.wifeShift) wifeInput.classList.add('has-value');
+    wifeInput.dataset.date = dateStr;
+    wifeInput.dataset.field = 'wifeShift';
+    bindShiftInput(wifeInput, 'wife');
+    wifeCell.appendChild(wifeInput);
+
+    // 予定欄
+    const eventCell = document.createElement('div');
+    eventCell.className = 'event-cell';
+    const eventInput = document.createElement('input');
+    eventInput.type = 'text';
+    eventInput.className = 'event-input';
+    eventInput.placeholder = '予定を追加...';
+    eventInput.value = rec.event || '';
+    eventInput.dataset.date = dateStr;
+    bindEventInput(eventInput);
+    eventCell.appendChild(eventInput);
+
     row.appendChild(dateCell);
-    row.appendChild(eventsCell);
-    row.addEventListener('click', () => onDayClick(dateStr));
+    row.appendChild(selfCell);
+    row.appendChild(wifeCell);
+    row.appendChild(eventCell);
     main.appendChild(row);
-    
+
     cur.setDate(cur.getDate() + 1);
   }
-  
-  document.getElementById('current-month-label').textContent =
+
+  document.getElementById('month-label').textContent =
     `${currentCenterDate.getFullYear()}年 ${currentCenterDate.getMonth()+1}月`;
-  
-  if (!selectedDate) {
+
+  // 今日の行までスクロール(初回のみ)
+  setTimeout(() => {
+    const todayRow = main.querySelector(`[data-date="${today}"]`);
+    if (todayRow) {
+      todayRow.scrollIntoView({ block: 'center', behavior: 'instant' });
+    }
+  }, 0);
+}
+
+// シフト入力欄: フォーカス時にドロップダウン表示、自由入力もOK
+function bindShiftInput(input, who) {
+  let dropdownTimer = null;
+
+  input.addEventListener('focus', (e) => {
+    showDropdown(input, who);
+  });
+  input.addEventListener('click', (e) => {
+    showDropdown(input, who);
+  });
+  input.addEventListener('input', () => {
+    // 自由入力中はドロップダウンを閉じる
+    hideDropdown();
+    if (input.value) input.classList.add('has-value');
+    else input.classList.remove('has-value');
+  });
+  input.addEventListener('blur', (e) => {
+    // ドロップダウンクリックで blur が走ると閉じてしまうので少し遅延
     setTimeout(() => {
-      const todayRow = main.querySelector(`[data-date="${today}"]`);
-      if (todayRow) {
-        todayRow.scrollIntoView({ block: 'start', behavior: 'instant' });
-        window.scrollBy(0, -100);
-      }
-    }, 0);
-  }
-}
-
-function onDayClick(dateStr) {
-  if (selectedDate === dateStr) {
-    openDetail(dateStr);
-    selectedDate = null;
-    updateQuickBar();
-    renderCalendar();
-  } else {
-    selectedDate = dateStr;
-    updateQuickBar();
-    renderCalendar();
-  }
-}
-
-function renderShiftSelect() {
-  const sel = document.getElementById('shift-select');
-  sel.innerHTML = '<option value="">シフトを選択...</option>';
-  state.shifts.forEach(sh => {
-    const opt = document.createElement('option');
-    opt.value = sh.id;
-    const timeStr = sh.start && sh.end ? ` (${sh.start}〜${sh.end})`
-                  : sh.start ? ` (${sh.start}〜)`
-                  : '';
-    opt.textContent = `${sh.name}${timeStr}`;
-    sel.appendChild(opt);
+      const dateStr = input.dataset.date;
+      const field = input.dataset.field;
+      setRecordField(dateStr, field, input.value);
+    }, 100);
   });
 }
 
-function updateQuickBar() {
-  const t = document.getElementById('quick-target');
-  const sel = document.getElementById('shift-select');
-  const apply = document.getElementById('shift-apply');
-  const misc = document.getElementById('misc-btn');
-  if (selectedDate) {
-    const d = parseYmd(selectedDate);
-    t.textContent = `${d.getMonth()+1}月${d.getDate()}日(${DOW[d.getDay()]}) に追加`;
-    t.classList.add('active');
-    sel.disabled = false;
-    apply.disabled = !sel.value;
-    misc.disabled = false;
-  } else {
-    t.textContent = '日付をタップして追加';
-    t.classList.remove('active');
-    sel.disabled = true;
-    sel.value = '';
-    apply.disabled = true;
-    misc.disabled = true;
-  }
+function bindEventInput(input) {
+  input.addEventListener('blur', () => {
+    const dateStr = input.dataset.date;
+    setRecordField(dateStr, 'event', input.value);
+  });
 }
 
-document.getElementById('shift-select').addEventListener('change', () => {
-  document.getElementById('shift-apply').disabled = !document.getElementById('shift-select').value;
-});
+// ============================================================
+// ドロップダウン
+// ============================================================
+function showDropdown(inputEl, who) {
+  const dropdown = document.getElementById('dropdown');
+  const patterns = (who === 'self') ? state.selfPatterns : state.wifePatterns;
+  const currentValue = inputEl.value;
 
-document.getElementById('shift-apply').onclick = () => {
-  if (!selectedDate) { alert('先に日付をタップしてください'); return; }
-  const sel = document.getElementById('shift-select');
-  const shiftId = sel.value;
-  if (!shiftId) return;
-  const sh = state.shifts.find(s => s.id === shiftId);
-  if (!sh) return;
-  const dup = state.events.find(e => e.date === selectedDate && e.kind === 'shift' && e.title === sh.name);
-  if (dup) {
-    if (!confirm(`${selectedDate} には既に「${sh.name}」があります。さらに追加しますか?`)) return;
-  }
-  state.events.push({
-    id: uid(),
-    title: sh.name,
-    date: selectedDate,
-    time: sh.start || '',
-    note: sh.start && sh.end ? `${sh.start}〜${sh.end}` : '',
-    kind: 'shift',
-    shiftColor: sh.color,
-    images: [],
-    done: false,
-    createdAt: Date.now()
-  });
-  saveData(state);
-  // 連続入力のため選択は維持、選択リセット
-  sel.value = '';
-  document.getElementById('shift-apply').disabled = true;
-  renderCalendar();
-};
+  dropdown.innerHTML = '';
 
-document.getElementById('misc-btn').onclick = () => {
-  if (!selectedDate) { alert('先に日付をタップしてください'); return; }
-  openEdit(null, selectedDate);
-};
+  // クリア項目
+  const clearItem = document.createElement('div');
+  clearItem.className = 'dropdown-item clear-item';
+  clearItem.textContent = '— (クリア)';
+  if (!currentValue) clearItem.classList.add('selected');
+  clearItem.onclick = (e) => {
+    e.stopPropagation();
+    inputEl.value = '';
+    inputEl.classList.remove('has-value');
+    const dateStr = inputEl.dataset.date;
+    const field = inputEl.dataset.field;
+    setRecordField(dateStr, field, '');
+    hideDropdown();
+    inputEl.blur();
+  };
+  dropdown.appendChild(clearItem);
 
-function openDetail(dateStr) {
-  const modal = document.getElementById('detail-modal');
-  const list = document.getElementById('detail-list');
-  const label = document.getElementById('detail-date-label');
-  const d = parseYmd(dateStr);
-  label.textContent = `${d.getMonth()+1}月${d.getDate()}日(${DOW[d.getDay()]})`;
-  
-  const evs = state.events.filter(e => e.date === dateStr);
-  evs.sort((a,b) => (a.time||'99') > (b.time||'99') ? 1 : -1);
-  
-  if (evs.length === 0) {
-    list.innerHTML = '<div style="text-align:center;color:var(--sub);padding:20px 0;">予定なし</div>';
-  } else {
-    list.innerHTML = '';
-    evs.forEach(ev => {
-      const div = document.createElement('div');
-      div.className = 'detail-event';
-      const kindLabel = {shift:'シフト',family:'家族予定',memo:'メモ',task:'タスク'}[ev.kind];
-      const timeStr = ev.time ? ` / ${ev.time}` : '';
-      const taskStr = ev.kind==='task' ? (ev.done ? ' / 完了' : ' / 未完了') : '';
-      const dotColor = (ev.kind === 'shift' && ev.shiftColor) ? ev.shiftColor :
-        ({shift:'#34c759',family:'#ff9500',memo:'#5ac8fa',task:'#af52de'}[ev.kind]);
-      div.innerHTML = `
-        <div class="dot" style="background:${dotColor}"></div>
-        <div class="body">
-          <div class="ttl">${escapeHtml(ev.title)}</div>
-          <div class="meta">${kindLabel}${timeStr}${taskStr}</div>
-          ${ev.note ? `<div class="note">${escapeHtml(ev.note)}</div>` : ''}
-          ${ev.images && ev.images.length>0 ? `<div class="imgs">${ev.images.map((src,i)=>`<img src="${src}" data-event="${ev.id}" data-idx="${i}">`).join('')}</div>` : ''}
-          <div class="detail-actions">
-            ${ev.kind==='task' ? `<button data-toggle-done="${ev.id}">${ev.done?'未完了に戻す':'完了'}</button>` : ''}
-            <button data-edit="${ev.id}">編集</button>
-            <button class="del-btn" data-del="${ev.id}">削除</button>
-          </div>
-        </div>
-      `;
-      list.appendChild(div);
-    });
-  }
-  
-  list.querySelectorAll('[data-edit]').forEach(b => {
-    b.onclick = e => { e.stopPropagation(); closeDetail(); openEdit(b.dataset.edit); };
-  });
-  list.querySelectorAll('[data-del]').forEach(b => {
-    b.onclick = e => {
+  patterns.forEach(p => {
+    const item = document.createElement('div');
+    item.className = 'dropdown-item';
+    item.textContent = p;
+    if (p === currentValue) item.classList.add('selected');
+    item.onclick = (e) => {
       e.stopPropagation();
-      if (confirm('削除しますか?')) {
-        state.events = state.events.filter(ev => ev.id !== b.dataset.del);
-        saveData(state); openDetail(dateStr); renderCalendar();
-      }
+      inputEl.value = p;
+      inputEl.classList.add('has-value');
+      const dateStr = inputEl.dataset.date;
+      const field = inputEl.dataset.field;
+      setRecordField(dateStr, field, p);
+      hideDropdown();
+      inputEl.blur();
     };
+    dropdown.appendChild(item);
   });
-  list.querySelectorAll('[data-toggle-done]').forEach(b => {
-    b.onclick = e => {
-      e.stopPropagation();
-      const ev = state.events.find(x => x.id === b.dataset.toggleDone);
-      if (ev) { ev.done = !ev.done; saveData(state); openDetail(dateStr); renderCalendar(); }
-    };
-  });
-  list.querySelectorAll('.imgs img').forEach(img => {
-    img.onclick = e => {
-      const ev = state.events.find(x => x.id === img.dataset.event);
-      if (ev) openPhotoViewer(ev.images, parseInt(img.dataset.idx), 'event', ev.id);
-    };
-  });
-  
-  document.getElementById('detail-add').onclick = () => { closeDetail(); openEdit(null, dateStr); };
-  document.getElementById('detail-close').onclick = closeDetail;
-  modal.classList.add('show');
-}
-function closeDetail() { document.getElementById('detail-modal').classList.remove('show'); }
 
-function openEdit(eventId, defaultDate) {
-  const modal = document.getElementById('edit-modal');
-  const titleEl = document.getElementById('modal-title');
-  if (eventId) {
-    const ev = state.events.find(e => e.id === eventId);
-    if (!ev) return;
-    editingId = ev.id;
-    editingKind = ev.kind;
-    editingImages = ev.images ? [...ev.images] : [];
-    document.getElementById('f-title').value = ev.title || '';
-    document.getElementById('f-date').value = ev.date;
-    document.getElementById('f-time').value = ev.time || '';
-    document.getElementById('f-note').value = ev.note || '';
-    titleEl.textContent = '予定を編集';
-    document.getElementById('btn-delete').style.display = 'block';
-  } else {
-    editingId = null;
-    editingKind = 'family';
-    editingImages = [];
-    document.getElementById('f-title').value = '';
-    document.getElementById('f-date').value = defaultDate || ymd(new Date());
-    document.getElementById('f-time').value = '';
-    document.getElementById('f-note').value = '';
-    titleEl.textContent = '予定を追加';
-    document.getElementById('btn-delete').style.display = 'none';
+  // 位置決め: input の下に表示、ただし画面外にはみ出さないよう調整
+  const rect = inputEl.getBoundingClientRect();
+  dropdown.style.display = 'block';
+  // 一旦表示してサイズ取得
+  const ddRect = dropdown.getBoundingClientRect();
+  let top = rect.bottom + 4;
+  let left = rect.left;
+
+  // 下に入らない場合は上に表示
+  if (top + ddRect.height > window.innerHeight - 80) {
+    top = rect.top - ddRect.height - 4;
+    if (top < 80) top = 80;
   }
-  updateKindTabs(); renderImages();
-  modal.classList.add('show');
-}
-function closeEdit() { document.getElementById('edit-modal').classList.remove('show'); }
-function updateKindTabs() {
-  document.querySelectorAll('#kind-tabs button').forEach(b => {
-    b.classList.toggle('active', b.dataset.kind === editingKind);
-  });
-}
-function renderImages() {
-  const area = document.getElementById('image-area');
-  area.querySelectorAll('.image-thumb').forEach(n => n.remove());
-  editingImages.forEach((src, i) => {
-    const div = document.createElement('div');
-    div.className = 'image-thumb';
-    div.innerHTML = `<img src="${src}"><button class="del" data-i="${i}">×</button>`;
-    div.querySelector('.del').onclick = () => { editingImages.splice(i,1); renderImages(); };
-    area.insertBefore(div, area.querySelector('.image-add'));
-  });
-}
-
-document.querySelectorAll('#kind-tabs button').forEach(b => {
-  b.onclick = () => { editingKind = b.dataset.kind; updateKindTabs(); };
-});
-document.getElementById('f-image').onchange = async (e) => {
-  const files = Array.from(e.target.files || []);
-  for (const file of files) {
-    const dataUrl = await resizeAndEncode(file, 1024);
-    editingImages.push(dataUrl);
+  // 右側はみ出し対策
+  if (left + ddRect.width > window.innerWidth - 8) {
+    left = window.innerWidth - ddRect.width - 8;
   }
-  renderImages();
-  e.target.value = '';
-};
+  if (left < 8) left = 8;
 
-function resizeAndEncode(file, maxSize) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const img = new Image();
-      img.onload = () => {
-        let { width, height } = img;
-        if (width > maxSize || height > maxSize) {
-          if (width > height) { height = Math.round(height * maxSize / width); width = maxSize; }
-          else { width = Math.round(width * maxSize / height); height = maxSize; }
-        }
-        const canvas = document.createElement('canvas');
-        canvas.width = width; canvas.height = height;
-        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', 0.8));
-      };
-      img.onerror = reject;
-      img.src = reader.result;
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
+  dropdown.style.top = `${top}px`;
+  dropdown.style.left = `${left}px`;
+  dropdown.style.minWidth = `${rect.width}px`;
+  dropdown.classList.add('show');
+  activeDropdown = { inputEl };
 }
 
-document.getElementById('btn-cancel').onclick = closeEdit;
-document.getElementById('btn-save').onclick = () => {
-  const title = document.getElementById('f-title').value.trim();
-  const date = document.getElementById('f-date').value;
-  const time = document.getElementById('f-time').value;
-  const note = document.getElementById('f-note').value;
-  if (!title) { alert('タイトルを入力してください'); return; }
-  if (!date) { alert('日付を選んでください'); return; }
-  
-  if (editingId) {
-    const ev = state.events.find(e => e.id === editingId);
-    Object.assign(ev, { title, date, time, note, kind: editingKind, images: editingImages });
-  } else {
-    state.events.push({
-      id: uid(), title, date, time, note,
-      kind: editingKind,
-      images: editingImages, done: false, createdAt: Date.now()
-    });
-  }
-  saveData(state); closeEdit(); renderCalendar();
-};
-document.getElementById('btn-delete').onclick = () => {
-  if (!editingId) return;
-  if (confirm('この予定を削除しますか?')) {
-    state.events = state.events.filter(e => e.id !== editingId);
-    saveData(state); closeEdit(); renderCalendar();
-  }
-};
+function hideDropdown() {
+  const dropdown = document.getElementById('dropdown');
+  dropdown.classList.remove('show');
+  dropdown.style.display = 'none';
+  activeDropdown = null;
+}
 
-document.getElementById('jump-today').onclick = () => {
-  currentCenterDate = new Date(); selectedDate = null;
-  updateQuickBar(); renderCalendar();
-};
-document.getElementById('jump-prev').onclick = () => {
+// 画面の他の場所をタップでドロップダウン閉じる
+document.addEventListener('click', (e) => {
+  if (!activeDropdown) return;
+  if (e.target.closest('.dropdown')) return;
+  if (e.target === activeDropdown.inputEl) return;
+  hideDropdown();
+}, true);
+
+// ============================================================
+// ナビゲーション
+// ============================================================
+document.getElementById('nav-prev').onclick = () => {
   currentCenterDate = new Date(currentCenterDate);
   currentCenterDate.setMonth(currentCenterDate.getMonth() - 1);
   renderCalendar();
 };
-document.getElementById('jump-next').onclick = () => {
+document.getElementById('nav-next').onclick = () => {
   currentCenterDate = new Date(currentCenterDate);
   currentCenterDate.setMonth(currentCenterDate.getMonth() + 1);
   renderCalendar();
 };
-
-document.getElementById('tab-cal').onclick = () => switchTab('calendar');
-document.getElementById('tab-album').onclick = () => switchTab('album');
-
-function switchTab(mode) {
-  viewMode = mode;
-  if (mode === 'calendar') {
-    document.getElementById('calendar-view').style.display = '';
-    document.getElementById('album-view').style.display = 'none';
-    document.getElementById('quick-bar').classList.remove('hidden');
-    document.getElementById('jump-bar').style.display = '';
-    document.getElementById('album-fab').classList.remove('show');
-    document.getElementById('header-title').textContent = '家族カレンダー';
-    document.getElementById('tab-cal').classList.add('active');
-    document.getElementById('tab-album').classList.remove('active');
-    renderCalendar();
-  } else {
-    document.getElementById('calendar-view').style.display = 'none';
-    document.getElementById('album-view').style.display = '';
-    document.getElementById('quick-bar').classList.add('hidden');
-    document.getElementById('jump-bar').style.display = 'none';
-    document.getElementById('album-fab').classList.add('show');
-    document.getElementById('header-title').textContent = 'アルバム';
-    document.getElementById('tab-album').classList.add('active');
-    document.getElementById('tab-cal').classList.remove('active');
-    renderAlbum();
-  }
-}
-
-function renderAlbum() {
-  const grid = document.getElementById('album-grid');
-  const header = document.getElementById('album-header');
-  const photos = [...state.album];
-  
-  header.textContent = `${photos.length}枚 / タップで拡大`;
-  
-  if (photos.length === 0) {
-    grid.innerHTML = '<div class="album-empty" style="grid-column:1/-1;">右下の＋から写真を追加</div>';
-    return;
-  }
-  
-  photos.sort((a,b) => b.createdAt - a.createdAt);
-  grid.innerHTML = photos.map((p, i) =>
-    `<div class="album-item" data-id="${p.id}"><img src="${p.src}"></div>`
-  ).join('');
-  
-  grid.querySelectorAll('.album-item').forEach((el, i) => {
-    el.onclick = () => openPhotoViewer(photos.map(p => p.src), i, 'album', null, photos);
-  });
-}
-
-document.getElementById('album-file').onchange = async (e) => {
-  const files = Array.from(e.target.files || []);
-  for (const file of files) {
-    const dataUrl = await resizeAndEncode(file, 1280);
-    state.album.push({
-      id: uid(), src: dataUrl, createdAt: Date.now()
-    });
-  }
-  saveData(state); renderAlbum();
-  e.target.value = '';
+document.getElementById('nav-today').onclick = () => {
+  currentCenterDate = new Date();
+  renderCalendar();
 };
 
-function openPhotoViewer(srcs, idx, mode, eventId, photoObjs) {
-  viewerImages = srcs; viewerIndex = idx; viewerMode = mode;
-  viewerPhotos = photoObjs || [];
-  document.getElementById('pv-img').src = srcs[idx];
-  updateViewerMeta();
-  document.getElementById('photo-viewer').classList.add('show');
-}
-function updateViewerMeta() {
-  const meta = document.getElementById('pv-meta');
-  if (viewerMode === 'album' && viewerPhotos[viewerIndex]) {
-    const p = viewerPhotos[viewerIndex];
-    const d = new Date(p.createdAt);
-    meta.textContent = `${viewerIndex+1}/${viewerImages.length} | ${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
-  } else {
-    meta.textContent = `${viewerIndex+1}/${viewerImages.length}`;
-  }
-}
-document.getElementById('pv-close').onclick = () => {
-  document.getElementById('photo-viewer').classList.remove('show');
-};
-document.getElementById('pv-prev').onclick = () => {
-  if (viewerIndex > 0) {
-    viewerIndex--;
-    document.getElementById('pv-img').src = viewerImages[viewerIndex];
-    updateViewerMeta();
-  }
-};
-document.getElementById('pv-next').onclick = () => {
-  if (viewerIndex < viewerImages.length - 1) {
-    viewerIndex++;
-    document.getElementById('pv-img').src = viewerImages[viewerIndex];
-    updateViewerMeta();
-  }
-};
-document.getElementById('pv-delete').onclick = () => {
-  if (viewerMode === 'album') {
-    if (!confirm('この写真を削除しますか?')) return;
-    const p = viewerPhotos[viewerIndex];
-    state.album = state.album.filter(x => x.id !== p.id);
-    saveData(state);
-    document.getElementById('photo-viewer').classList.remove('show');
-    renderAlbum();
-  } else {
-    alert('予定の編集画面から削除してください');
-  }
-};
-
+// ============================================================
+// 設定
+// ============================================================
 document.getElementById('open-settings').onclick = () => {
-  renderShiftPatterns();
+  renderPatterns();
+  document.getElementById('theme-toggle').classList.toggle('on', state.theme === 'light');
   document.getElementById('settings-modal').classList.add('show');
 };
 document.getElementById('settings-close').onclick = () => {
   document.getElementById('settings-modal').classList.remove('show');
-  renderShiftSelect();
+  renderCalendar();
 };
 
-function renderShiftPatterns() {
-  const list = document.getElementById('shift-patterns-list');
-  list.innerHTML = '';
-  state.shifts.forEach(sh => {
-    const div = document.createElement('div');
-    div.className = 'shift-list-item';
-    const timeStr = sh.start && sh.end ? `${sh.start} 〜 ${sh.end}` : '時刻なし';
-    div.innerHTML = `
-      <div class="swatch" style="background:${sh.color}"></div>
-      <div class="info">
-        <div>${escapeHtml(sh.name)}</div>
-        <div class="sub">${timeStr}</div>
-      </div>
-      <div class="actions">
-        <button data-edit="${sh.id}">編集</button>
-      </div>
-    `;
-    list.appendChild(div);
-  });
-  list.querySelectorAll('[data-edit]').forEach(b => {
-    b.onclick = () => openShiftEdit(b.dataset.edit);
+document.getElementById('theme-toggle').onclick = () => {
+  state.theme = (state.theme === 'light') ? 'dark' : 'light';
+  saveData();
+  applyTheme();
+  document.getElementById('theme-toggle').classList.toggle('on', state.theme === 'light');
+};
+
+function renderPatterns() {
+  ['self', 'wife'].forEach(who => {
+    const list = document.getElementById(`${who}-patterns`);
+    const patterns = (who === 'self') ? state.selfPatterns : state.wifePatterns;
+    list.innerHTML = '';
+    patterns.forEach((p, i) => {
+      const item = document.createElement('div');
+      item.className = 'shift-pattern-item';
+      item.innerHTML = `
+        <input type="text" value="${escapeHtml(p)}" maxlength="15" data-who="${who}" data-i="${i}">
+        <button class="del-pattern" data-who="${who}" data-i="${i}">×</button>
+      `;
+      list.appendChild(item);
+    });
+    list.querySelectorAll('input').forEach(inp => {
+      inp.onchange = () => {
+        const w = inp.dataset.who;
+        const i = parseInt(inp.dataset.i);
+        const arr = (w === 'self') ? state.selfPatterns : state.wifePatterns;
+        arr[i] = inp.value.trim();
+        // 空のものを除く
+        const filtered = arr.filter(x => x);
+        if (w === 'self') state.selfPatterns = filtered;
+        else state.wifePatterns = filtered;
+        saveData();
+      };
+    });
+    list.querySelectorAll('.del-pattern').forEach(btn => {
+      btn.onclick = () => {
+        const w = btn.dataset.who;
+        const i = parseInt(btn.dataset.i);
+        if (w === 'self') state.selfPatterns.splice(i, 1);
+        else state.wifePatterns.splice(i, 1);
+        saveData();
+        renderPatterns();
+      };
+    });
   });
 }
-document.getElementById('add-shift-pattern').onclick = () => openShiftEdit(null);
 
-function openShiftEdit(shiftId) {
-  if (shiftId) {
-    const sh = state.shifts.find(s => s.id === shiftId);
-    if (!sh) return;
-    editingShiftId = sh.id;
-    document.getElementById('sf-name').value = sh.name;
-    document.getElementById('sf-start').value = sh.start || '';
-    document.getElementById('sf-end').value = sh.end || '';
-    document.getElementById('sf-color').value = sh.color;
-    document.getElementById('shift-edit-title').textContent = 'シフト編集';
-    document.getElementById('sf-delete').style.display = 'block';
-  } else {
-    editingShiftId = null;
-    document.getElementById('sf-name').value = '';
-    document.getElementById('sf-start').value = '';
-    document.getElementById('sf-end').value = '';
-    document.getElementById('sf-color').value = '#34c759';
-    document.getElementById('shift-edit-title').textContent = 'シフト追加';
-    document.getElementById('sf-delete').style.display = 'none';
-  }
-  document.getElementById('shift-edit-modal').classList.add('show');
-}
-document.getElementById('sf-cancel').onclick = () => {
-  document.getElementById('shift-edit-modal').classList.remove('show');
-};
-document.getElementById('sf-save').onclick = () => {
-  const name = document.getElementById('sf-name').value.trim();
-  const start = document.getElementById('sf-start').value;
-  const end = document.getElementById('sf-end').value;
-  const color = document.getElementById('sf-color').value;
-  if (!name) { alert('名称を入力してください'); return; }
-  
-  if (editingShiftId) {
-    const sh = state.shifts.find(s => s.id === editingShiftId);
-    Object.assign(sh, { name, start, end, color });
-  } else {
-    state.shifts.push({ id: uid(), name, start, end, color });
-  }
-  saveData(state);
-  document.getElementById('shift-edit-modal').classList.remove('show');
-  renderShiftPatterns();
-};
-document.getElementById('sf-delete').onclick = () => {
-  if (!editingShiftId) return;
-  if (state.shifts.length <= 1) { alert('最低1つは残してください'); return; }
-  if (confirm('このシフトパターンを削除しますか?(過去の予定は残ります)')) {
-    state.shifts = state.shifts.filter(s => s.id !== editingShiftId);
-    saveData(state);
-    document.getElementById('shift-edit-modal').classList.remove('show');
-    renderShiftPatterns();
-  }
-};
+document.querySelectorAll('.add-pattern-btn').forEach(btn => {
+  btn.onclick = () => {
+    const target = btn.dataset.target;
+    if (target === 'self') state.selfPatterns.push('');
+    else state.wifePatterns.push('');
+    saveData();
+    renderPatterns();
+  };
+});
 
+// データ管理
 document.getElementById('export-data').onclick = () => {
   const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -1289,29 +781,27 @@ document.getElementById('import-file').onchange = async (e) => {
   try {
     const data = JSON.parse(text);
     state = data;
-    if (!state.shifts) state.shifts = DEFAULT_SHIFTS;
-    if (!state.album) state.album = [];
-    saveData(state);
-    renderShiftPatterns(); renderShiftSelect(); renderCalendar();
+    if (!state.records) state.records = {};
+    if (!state.selfPatterns) state.selfPatterns = DEFAULT_DATA.selfPatterns;
+    if (!state.wifePatterns) state.wifePatterns = DEFAULT_DATA.wifePatterns;
+    if (!state.theme) state.theme = 'dark';
+    saveData();
+    applyTheme();
+    renderPatterns();
+    renderCalendar();
     alert('読み込み完了');
   } catch(err) { alert('読み込み失敗: ' + err.message); }
   e.target.value = '';
 };
 
-document.getElementById('edit-modal').onclick = e => { if (e.target.id === 'edit-modal') closeEdit(); };
-document.getElementById('detail-modal').onclick = e => { if (e.target.id === 'detail-modal') closeDetail(); };
-document.getElementById('settings-modal').onclick = e => {
+document.getElementById('settings-modal').addEventListener('click', e => {
   if (e.target.id === 'settings-modal') {
     document.getElementById('settings-modal').classList.remove('show');
-    renderShiftSelect();
+    renderCalendar();
   }
-};
-document.getElementById('shift-edit-modal').onclick = e => {
-  if (e.target.id === 'shift-edit-modal') document.getElementById('shift-edit-modal').classList.remove('show');
-};
+});
 
-renderShiftSelect();
-updateQuickBar();
+// 初期描画
 renderCalendar();
 </script>
 
