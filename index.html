@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="家族カレンダー">
+<title>家族カレンダー</title>
+<style>
+:root {
+  --bg: #f5f5f7;
+  --card: #ffffff;
+  --text: #1d1d1f;
+  --sub: #86868b;
+  --border: #e5e5ea;
+  --accent: #007aff;
+  --shift: #34c759;
+  --family: #ff9500;
+  --memo: #5ac8fa;
+  --task: #af52de;
+  --shared: #ff3b30;
+  --weekend-sat: #007aff;
+  --weekend-sun: #ff3b30;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body {
+  margin: 0; padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "ヒラギノ角ゴ ProN W3", "Yu Gothic", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* ヘッダー */
+header {
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(245,245,247,0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: env(safe-area-inset-top, 0) 0 0 0;
+}
+.header-inner {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px;
+}
+.title { font-size: 17px; font-weight: 600; }
+.user-toggle {
+  display: flex; gap: 4px;
+  background: var(--border); border-radius: 8px; padding: 2px;
+}
+.user-toggle button {
+  border: none; background: transparent; padding: 6px 12px;
+  border-radius: 6px; font-size: 13px; font-weight: 500;
+  color: var(--sub); cursor: pointer;
+}
+.user-toggle button.active {
+  background: var(--card); color: var(--text);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+}
+
+/* リスト */
+main {
+  padding: 0 0 120px 0;
+}
+.day-row {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  min-height: 56px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.day-row:active { background: #f0f0f3; }
+.day-row.today { background: #fffbe6; }
+.day-row.month-start {
+  border-top: 8px solid var(--bg);
+  position: relative;
+}
+.day-row.month-start::before {
+  content: attr(data-month);
+  position: absolute;
+  top: -28px; left: 16px;
+  font-size: 13px; font-weight: 600; color: var(--sub);
+  background: var(--bg); padding: 4px 0;
+}
+.date-cell {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 8px 4px;
+  border-right: 1px solid var(--border);
+}
+.date-num { font-size: 22px; font-weight: 600; line-height: 1; }
+.date-dow { font-size: 11px; color: var(--sub); margin-top: 2px; }
+.date-cell.sat .date-dow, .date-cell.sat .date-num { color: var(--weekend-sat); }
+.date-cell.sun .date-dow, .date-cell.sun .date-num { color: var(--weekend-sun); }
+.date-cell.holiday .date-dow, .date-cell.holiday .date-num { color: var(--weekend-sun); }
+
+.events-cell {
+  padding: 8px 12px;
+  display: flex; flex-direction: column; gap: 4px;
+  min-width: 0;
+}
+.event-chip {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 14px; line-height: 1.3;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: #f0f0f3;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.event-chip .tag {
+  display: inline-block;
+  width: 8px; height: 8px; border-radius: 50%;
+  flex-shrink: 0;
+}
+.tag-shift { background: var(--shift); }
+.tag-family { background: var(--family); }
+.tag-memo { background: var(--memo); }
+.tag-task { background: var(--task); }
+.event-chip .shared-mark {
+  font-size: 10px; color: var(--shared);
+  margin-left: auto; flex-shrink: 0;
+}
+.event-chip .img-mark {
+  font-size: 11px; flex-shrink: 0;
+}
+.event-chip.task-done {
+  text-decoration: line-through;
+  color: var(--sub);
+}
+.empty-row { color: var(--sub); font-size: 13px; padding: 4px 0; }
+
+/* FAB */
+.fab {
+  position: fixed;
+  right: 20px; bottom: calc(20px + env(safe-area-inset-bottom, 0));
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white; font-size: 28px;
+  border: none;
+  box-shadow: 0 4px 16px rgba(0,122,255,0.4);
+  cursor: pointer;
+  z-index: 5;
+}
+
+/* モーダル */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: none;
+  z-index: 100;
+  align-items: flex-end;
+  justify-content: center;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: var(--card);
+  width: 100%;
+  max-width: 540px;
+  border-radius: 16px 16px 0 0;
+  padding: 20px 20px calc(20px + env(safe-area-inset-bottom, 0)) 20px;
+  max-height: 85vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.modal h2 { margin: 0 0 16px 0; font-size: 18px; }
+.field { margin-bottom: 14px; }
+.field label {
+  display: block; font-size: 13px; color: var(--sub); margin-bottom: 6px; font-weight: 500;
+}
+.field input[type="text"],
+.field input[type="date"],
+.field input[type="time"],
+.field textarea,
+.field select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 16px; /* iOS自動ズーム回避 */
+  background: var(--bg);
+  font-family: inherit;
+}
+.field textarea { min-height: 80px; resize: vertical; }
+.row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.kind-tabs {
+  display: flex; gap: 6px; margin-bottom: 14px;
+}
+.kind-tabs button {
+  flex: 1;
+  padding: 10px 4px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  border-radius: 8px;
+  font-size: 13px; font-weight: 500;
+  cursor: pointer;
+  color: var(--sub);
+}
+.kind-tabs button.active {
+  background: var(--accent); color: white; border-color: var(--accent);
+}
+.share-toggle {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px; background: var(--bg); border-radius: 8px;
+  margin-bottom: 14px;
+}
+.share-toggle .label { font-size: 14px; }
+.toggle-switch {
+  position: relative; width: 50px; height: 30px;
+  background: #ccc; border-radius: 15px;
+  cursor: pointer; transition: background 0.2s;
+}
+.toggle-switch.on { background: var(--shift); }
+.toggle-switch::after {
+  content: ''; position: absolute; top: 2px; left: 2px;
+  width: 26px; height: 26px; background: white; border-radius: 50%;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.toggle-switch.on::after { transform: translateX(20px); }
+.image-area {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.image-thumb {
+  position: relative;
+  width: 80px; height: 80px;
+  border-radius: 8px; overflow: hidden;
+  border: 1px solid var(--border);
+}
+.image-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.image-thumb .del {
+  position: absolute; top: 2px; right: 2px;
+  background: rgba(0,0,0,0.6); color: white;
+  border: none; width: 22px; height: 22px;
+  border-radius: 50%; font-size: 12px; cursor: pointer;
+}
+.image-add {
+  width: 80px; height: 80px;
+  border: 2px dashed var(--border); border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; color: var(--sub);
+  cursor: pointer; background: var(--bg);
+}
+.image-add input { display: none; }
+.modal-actions {
+  display: flex; gap: 10px; margin-top: 8px;
+}
+.modal-actions button {
+  flex: 1; padding: 12px; border-radius: 10px;
+  font-size: 15px; font-weight: 600; border: none;
+  cursor: pointer;
+}
+.btn-cancel { background: var(--bg); color: var(--text); }
+.btn-save { background: var(--accent); color: white; }
+.btn-delete { background: var(--shared); color: white; }
+
+/* 詳細表示 */
+.detail-event {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 12px; background: var(--bg);
+  border-radius: 10px; margin-bottom: 10px;
+}
+.detail-event .body { flex: 1; min-width: 0; }
+.detail-event .title { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+.detail-event .meta { font-size: 12px; color: var(--sub); }
+.detail-event .note { font-size: 13px; color: var(--text); margin-top: 6px; white-space: pre-wrap; }
+.detail-event .imgs { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.detail-event .imgs img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; }
+.detail-actions { display: flex; gap: 6px; }
+.detail-actions button {
+  border: none; background: transparent; padding: 4px 8px;
+  font-size: 12px; color: var(--accent); cursor: pointer;
+}
+.detail-actions .del-btn { color: var(--shared); }
+
+/* 範囲ジャンプ */
+.jump-bar {
+  display: flex; gap: 8px; padding: 10px 16px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+.jump-bar button {
+  border: 1px solid var(--border);
+  background: var(--card);
+  padding: 6px 12px; border-radius: 6px;
+  font-size: 13px; cursor: pointer;
+}
+
+/* ローディング */
+.loading {
+  text-align: center; padding: 20px; color: var(--sub); font-size: 13px;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="title">家族カレンダー</div>
+    <div class="user-toggle">
+      <button id="user-self" class="active">自分</button>
+      <button id="user-family">家族</button>
+    </div>
+  </div>
+  <div class="jump-bar">
+    <button id="jump-today">今日</button>
+    <button id="jump-prev">◀ 前月</button>
+    <button id="jump-next">次月 ▶</button>
+    <span id="current-month-label" style="margin-left:auto;align-self:center;color:var(--sub);font-size:13px;"></span>
+  </div>
+</header>
+
+<main id="calendar-list"></main>
+
+<button class="fab" id="fab">＋</button>
+
+<!-- 編集モーダル -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal">
+    <h2 id="modal-title">予定を追加</h2>
+    <div class="kind-tabs" id="kind-tabs">
+      <button data-kind="shift" class="active">シフト</button>
+      <button data-kind="family">家族予定</button>
+      <button data-kind="memo">メモ</button>
+      <button data-kind="task">タスク</button>
+    </div>
+    <div class="field">
+      <label>タイトル</label>
+      <input type="text" id="f-title" placeholder="例: 早番 / 通院 / 買い物">
+    </div>
+    <div class="row-2">
+      <div class="field">
+        <label>日付</label>
+        <input type="date" id="f-date">
+      </div>
+      <div class="field" id="time-field">
+        <label>時刻(任意)</label>
+        <input type="time" id="f-time">
+      </div>
+    </div>
+    <div class="field">
+      <label>メモ</label>
+      <textarea id="f-note" placeholder="詳細"></textarea>
+    </div>
+    <div class="image-area" id="image-area">
+      <label class="image-add">
+        ＋
+        <input type="file" id="f-image" accept="image/*" multiple>
+      </label>
+    </div>
+    <div class="share-toggle">
+      <span class="label">家族と共有する</span>
+      <div class="toggle-switch" id="share-toggle"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="btn-cancel">キャンセル</button>
+      <button class="btn-delete" id="btn-delete" style="display:none;">削除</button>
+      <button class="btn-save" id="btn-save">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 詳細モーダル -->
+<div class="modal-overlay" id="detail-modal">
+  <div class="modal">
+    <h2 id="detail-date-label"></h2>
+    <div id="detail-list"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="detail-close">閉じる</button>
+      <button class="btn-save" id="detail-add">この日に追加</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// データ層
+// ============================================================
+const STORAGE_KEY = 'family-calendar-v1';
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return { events: [] };
+    return JSON.parse(raw);
+  } catch(e) {
+    console.error('loadData error', e);
+    return { events: [] };
+  }
+}
+
+function saveData(data) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch(e) {
+    alert('保存に失敗しました(容量超過の可能性があります): ' + e.message);
+  }
+}
+
+let state = loadData();
+let viewUser = 'self'; // 'self' or 'family'
+let editingId = null;
+let editingKind = 'shift';
+let editingShared = false;
+let editingImages = [];
+
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+}
+
+function ymd(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+
+function parseYmd(s) {
+  const [y,m,d] = s.split('-').map(Number);
+  return new Date(y, m-1, d);
+}
+
+// ============================================================
+// 描画
+// ============================================================
+const DOW = ['日','月','火','水','木','金','土'];
+
+function isVisibleForUser(ev) {
+  if (viewUser === 'self') return true; // 自分は全部見れる
+  // 家族側は shared:true のものだけ
+  return ev.shared === true;
+}
+
+function renderCalendar(centerDate) {
+  const main = document.getElementById('calendar-list');
+  main.innerHTML = '';
+  const start = new Date(centerDate);
+  start.setDate(1);
+  start.setMonth(start.getMonth() - 1);
+  const end = new Date(centerDate);
+  end.setDate(1);
+  end.setMonth(end.getMonth() + 2);
+  
+  const today = ymd(new Date());
+  const eventsByDate = {};
+  state.events.filter(isVisibleForUser).forEach(ev => {
+    if (!eventsByDate[ev.date]) eventsByDate[ev.date] = [];
+    eventsByDate[ev.date].push(ev);
+  });
+  
+  let lastMonth = -1;
+  const cur = new Date(start);
+  while (cur < end) {
+    const dateStr = ymd(cur);
+    const dow = cur.getDay();
+    const m = cur.getMonth();
+    
+    const row = document.createElement('div');
+    row.className = 'day-row';
+    if (m !== lastMonth) {
+      row.classList.add('month-start');
+      row.dataset.month = `${cur.getFullYear()}年 ${m+1}月`;
+      lastMonth = m;
+    }
+    if (dateStr === today) row.classList.add('today');
+    row.dataset.date = dateStr;
+    
+    const dateCell = document.createElement('div');
+    dateCell.className = 'date-cell';
+    if (dow === 0) dateCell.classList.add('sun');
+    if (dow === 6) dateCell.classList.add('sat');
+    dateCell.innerHTML = `
+      <div class="date-num">${cur.getDate()}</div>
+      <div class="date-dow">${DOW[dow]}</div>
+    `;
+    
+    const eventsCell = document.createElement('div');
+    eventsCell.className = 'events-cell';
+    const evs = eventsByDate[dateStr] || [];
+    if (evs.length === 0) {
+      eventsCell.innerHTML = '<div class="empty-row">—</div>';
+    } else {
+      evs.sort((a,b) => (a.time||'99') > (b.time||'99') ? 1 : -1);
+      evs.forEach(ev => {
+        const chip = document.createElement('div');
+        chip.className = 'event-chip';
+        if (ev.kind === 'task' && ev.done) chip.classList.add('task-done');
+        const timeStr = ev.time ? `${ev.time} ` : '';
+        const sharedMark = (viewUser==='self' && ev.shared) ? '<span class="shared-mark">共有</span>' : '';
+        const imgMark = (ev.images && ev.images.length>0) ? '<span class="img-mark">📷</span>' : '';
+        chip.innerHTML = `
+          <span class="tag tag-${ev.kind}"></span>
+          <span>${timeStr}${escapeHtml(ev.title)}</span>
+          ${imgMark}${sharedMark}
+        `;
+        eventsCell.appendChild(chip);
+      });
+    }
+    
+    row.appendChild(dateCell);
+    row.appendChild(eventsCell);
+    row.addEventListener('click', () => openDetail(dateStr));
+    main.appendChild(row);
+    
+    cur.setDate(cur.getDate() + 1);
+  }
+  
+  // 月ラベル更新
+  document.getElementById('current-month-label').textContent =
+    `${centerDate.getFullYear()}年 ${centerDate.getMonth()+1}月`;
+  
+  // 今日の行までスクロール
+  setTimeout(() => {
+    const todayRow = main.querySelector(`[data-date="${today}"]`);
+    if (todayRow) {
+      todayRow.scrollIntoView({ block: 'start', behavior: 'instant' });
+      window.scrollBy(0, -100); // ヘッダー分オフセット
+    }
+  }, 0);
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+
+// ============================================================
+// 詳細モーダル
+// ============================================================
+function openDetail(dateStr) {
+  const modal = document.getElementById('detail-modal');
+  const list = document.getElementById('detail-list');
+  const label = document.getElementById('detail-date-label');
+  
+  const d = parseYmd(dateStr);
+  label.textContent = `${d.getMonth()+1}月${d.getDate()}日(${DOW[d.getDay()]})`;
+  
+  const evs = state.events.filter(e => e.date === dateStr && isVisibleForUser(e));
+  evs.sort((a,b) => (a.time||'99') > (b.time||'99') ? 1 : -1);
+  
+  if (evs.length === 0) {
+    list.innerHTML = '<div style="text-align:center;color:var(--sub);padding:20px 0;">予定なし</div>';
+  } else {
+    list.innerHTML = '';
+    evs.forEach(ev => {
+      const div = document.createElement('div');
+      div.className = 'detail-event';
+      const kindLabel = {shift:'シフト',family:'家族予定',memo:'メモ',task:'タスク'}[ev.kind];
+      const timeStr = ev.time ? ` / ${ev.time}` : '';
+      const sharedStr = ev.shared ? ' / 共有中' : '';
+      const taskStr = ev.kind==='task' ? (ev.done ? ' / 完了' : ' / 未完了') : '';
+      div.innerHTML = `
+        <span class="tag tag-${ev.kind}" style="margin-top:6px;"></span>
+        <div class="body">
+          <div class="title">${escapeHtml(ev.title)}</div>
+          <div class="meta">${kindLabel}${timeStr}${sharedStr}${taskStr}</div>
+          ${ev.note ? `<div class="note">${escapeHtml(ev.note)}</div>` : ''}
+          ${ev.images && ev.images.length>0 ? `<div class="imgs">${ev.images.map(src=>`<img src="${src}">`).join('')}</div>` : ''}
+          <div class="detail-actions">
+            ${ev.kind==='task' ? `<button data-toggle-done="${ev.id}">${ev.done?'未完了に戻す':'完了'}</button>` : ''}
+            <button data-edit="${ev.id}">編集</button>
+            <button class="del-btn" data-del="${ev.id}">削除</button>
+          </div>
+        </div>
+      `;
+      list.appendChild(div);
+    });
+  }
+  
+  // ボタン処理
+  list.querySelectorAll('[data-edit]').forEach(b => {
+    b.addEventListener('click', e => {
+      e.stopPropagation();
+      closeDetail();
+      openEdit(b.dataset.edit);
+    });
+  });
+  list.querySelectorAll('[data-del]').forEach(b => {
+    b.addEventListener('click', e => {
+      e.stopPropagation();
+      if (confirm('削除しますか?')) {
+        state.events = state.events.filter(ev => ev.id !== b.dataset.del);
+        saveData(state);
+        openDetail(dateStr);
+        renderCalendar(currentCenterDate);
+      }
+    });
+  });
+  list.querySelectorAll('[data-toggle-done]').forEach(b => {
+    b.addEventListener('click', e => {
+      e.stopPropagation();
+      const ev = state.events.find(x => x.id === b.dataset.toggleDone);
+      if (ev) {
+        ev.done = !ev.done;
+        saveData(state);
+        openDetail(dateStr);
+        renderCalendar(currentCenterDate);
+      }
+    });
+  });
+  
+  document.getElementById('detail-add').onclick = () => {
+    closeDetail();
+    openEdit(null, dateStr);
+  };
+  document.getElementById('detail-close').onclick = closeDetail;
+  
+  modal.classList.add('show');
+}
+function closeDetail() {
+  document.getElementById('detail-modal').classList.remove('show');
+}
+
+// ============================================================
+// 編集モーダル
+// ============================================================
+function openEdit(eventId, defaultDate) {
+  const modal = document.getElementById('edit-modal');
+  const titleEl = document.getElementById('modal-title');
+  
+  if (eventId) {
+    const ev = state.events.find(e => e.id === eventId);
+    if (!ev) return;
+    editingId = ev.id;
+    editingKind = ev.kind;
+    editingShared = !!ev.shared;
+    editingImages = ev.images ? [...ev.images] : [];
+    document.getElementById('f-title').value = ev.title || '';
+    document.getElementById('f-date').value = ev.date;
+    document.getElementById('f-time').value = ev.time || '';
+    document.getElementById('f-note').value = ev.note || '';
+    titleEl.textContent = '予定を編集';
+    document.getElementById('btn-delete').style.display = 'block';
+  } else {
+    editingId = null;
+    editingKind = 'shift';
+    editingShared = false;
+    editingImages = [];
+    document.getElementById('f-title').value = '';
+    document.getElementById('f-date').value = defaultDate || ymd(new Date());
+    document.getElementById('f-time').value = '';
+    document.getElementById('f-note').value = '';
+    titleEl.textContent = '予定を追加';
+    document.getElementById('btn-delete').style.display = 'none';
+  }
+  
+  updateKindTabs();
+  updateShareToggle();
+  renderImages();
+  modal.classList.add('show');
+}
+function closeEdit() {
+  document.getElementById('edit-modal').classList.remove('show');
+}
+function updateKindTabs() {
+  document.querySelectorAll('#kind-tabs button').forEach(b => {
+    b.classList.toggle('active', b.dataset.kind === editingKind);
+  });
+}
+function updateShareToggle() {
+  document.getElementById('share-toggle').classList.toggle('on', editingShared);
+}
+function renderImages() {
+  const area = document.getElementById('image-area');
+  area.querySelectorAll('.image-thumb').forEach(n => n.remove());
+  editingImages.forEach((src, i) => {
+    const div = document.createElement('div');
+    div.className = 'image-thumb';
+    div.innerHTML = `<img src="${src}"><button class="del" data-i="${i}">×</button>`;
+    div.querySelector('.del').addEventListener('click', () => {
+      editingImages.splice(i,1);
+      renderImages();
+    });
+    area.insertBefore(div, area.querySelector('.image-add'));
+  });
+}
+
+document.querySelectorAll('#kind-tabs button').forEach(b => {
+  b.addEventListener('click', () => {
+    editingKind = b.dataset.kind;
+    updateKindTabs();
+  });
+});
+document.getElementById('share-toggle').addEventListener('click', () => {
+  editingShared = !editingShared;
+  updateShareToggle();
+});
+document.getElementById('f-image').addEventListener('change', async (e) => {
+  const files = Array.from(e.target.files || []);
+  for (const file of files) {
+    const dataUrl = await resizeAndEncode(file, 1024);
+    editingImages.push(dataUrl);
+  }
+  renderImages();
+  e.target.value = '';
+});
+
+function resizeAndEncode(file, maxSize) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxSize || height > maxSize) {
+          if (width > height) {
+            height = Math.round(height * maxSize / width);
+            width = maxSize;
+          } else {
+            width = Math.round(width * maxSize / height);
+            height = maxSize;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', 0.8));
+      };
+      img.onerror = reject;
+      img.src = reader.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+document.getElementById('btn-cancel').onclick = closeEdit;
+document.getElementById('btn-save').onclick = () => {
+  const title = document.getElementById('f-title').value.trim();
+  const date = document.getElementById('f-date').value;
+  const time = document.getElementById('f-time').value;
+  const note = document.getElementById('f-note').value;
+  if (!title) { alert('タイトルを入力してください'); return; }
+  if (!date) { alert('日付を選んでください'); return; }
+  
+  if (editingId) {
+    const ev = state.events.find(e => e.id === editingId);
+    Object.assign(ev, { title, date, time, note, kind: editingKind, shared: editingShared, images: editingImages });
+  } else {
+    state.events.push({
+      id: uid(),
+      title, date, time, note,
+      kind: editingKind,
+      shared: editingShared,
+      images: editingImages,
+      done: false,
+      createdAt: Date.now()
+    });
+  }
+  saveData(state);
+  closeEdit();
+  renderCalendar(currentCenterDate);
+};
+document.getElementById('btn-delete').onclick = () => {
+  if (!editingId) return;
+  if (confirm('この予定を削除しますか?')) {
+    state.events = state.events.filter(e => e.id !== editingId);
+    saveData(state);
+    closeEdit();
+    renderCalendar(currentCenterDate);
+  }
+};
+
+// ============================================================
+// ヘッダー操作
+// ============================================================
+let currentCenterDate = new Date();
+document.getElementById('user-self').onclick = () => {
+  viewUser = 'self';
+  document.getElementById('user-self').classList.add('active');
+  document.getElementById('user-family').classList.remove('active');
+  renderCalendar(currentCenterDate);
+};
+document.getElementById('user-family').onclick = () => {
+  viewUser = 'family';
+  document.getElementById('user-family').classList.add('active');
+  document.getElementById('user-self').classList.remove('active');
+  renderCalendar(currentCenterDate);
+};
+document.getElementById('jump-today').onclick = () => {
+  currentCenterDate = new Date();
+  renderCalendar(currentCenterDate);
+};
+document.getElementById('jump-prev').onclick = () => {
+  currentCenterDate = new Date(currentCenterDate);
+  currentCenterDate.setMonth(currentCenterDate.getMonth() - 1);
+  renderCalendar(currentCenterDate);
+};
+document.getElementById('jump-next').onclick = () => {
+  currentCenterDate = new Date(currentCenterDate);
+  currentCenterDate.setMonth(currentCenterDate.getMonth() + 1);
+  renderCalendar(currentCenterDate);
+};
+document.getElementById('fab').onclick = () => openEdit(null);
+
+// オーバーレイクリックで閉じる
+document.getElementById('edit-modal').addEventListener('click', e => {
+  if (e.target.id === 'edit-modal') closeEdit();
+});
+document.getElementById('detail-modal').addEventListener('click', e => {
+  if (e.target.id === 'detail-modal') closeDetail();
+});
+
+// 初期描画
+renderCalendar(currentCenterDate);
+</script>
+
+</body>
+</html>
