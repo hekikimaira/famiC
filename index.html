@@ -19,7 +19,6 @@
   --family: #ff9500;
   --memo: #5ac8fa;
   --task: #af52de;
-  --shared: #ff3b30;
   --weekend-sat: #007aff;
   --weekend-sun: #ff3b30;
 }
@@ -46,19 +45,6 @@ header {
   padding: 12px 16px;
 }
 .title { font-size: 17px; font-weight: 600; }
-.user-toggle {
-  display: flex; gap: 4px;
-  background: var(--border); border-radius: 8px; padding: 2px;
-}
-.user-toggle button {
-  border: none; background: transparent; padding: 6px 12px;
-  border-radius: 6px; font-size: 13px; font-weight: 500;
-  color: var(--sub); cursor: pointer;
-}
-.user-toggle button.active {
-  background: var(--card); color: var(--text);
-  box-shadow: 0 1px 2px rgba(0,0,0,0.06);
-}
 .jump-bar {
   display: flex; gap: 8px; padding: 10px 16px;
   background: var(--card);
@@ -81,7 +67,7 @@ header {
 }
 
 main {
-  padding: 0 0 calc(140px + env(safe-area-inset-bottom, 0)) 0;
+  padding: 0 0 calc(180px + env(safe-area-inset-bottom, 0)) 0;
 }
 
 .day-row {
@@ -144,12 +130,9 @@ main {
 .tag-family { background: var(--family); }
 .tag-memo { background: var(--memo); }
 .tag-task { background: var(--task); }
-.event-chip .shared-mark {
-  font-size: 10px; color: var(--shared);
-  margin-left: auto; flex-shrink: 0;
-}
 .event-chip .img-mark {
   font-size: 11px; flex-shrink: 0;
+  margin-left: auto;
 }
 .event-chip.task-done {
   text-decoration: line-through;
@@ -165,9 +148,9 @@ main {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-top: 1px solid var(--border);
-  padding: 8px 12px;
+  padding: 10px 12px;
   z-index: 8;
-  display: flex; flex-direction: column; gap: 6px;
+  display: flex; flex-direction: column; gap: 8px;
 }
 .quick-bar.hidden { display: none; }
 .quick-target {
@@ -177,34 +160,67 @@ main {
 .quick-target.active {
   color: var(--accent); font-weight: 600;
 }
-.quick-buttons {
-  display: flex; gap: 6px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  padding-bottom: 2px;
+.quick-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 8px;
 }
-.quick-buttons::-webkit-scrollbar { display: none; }
-.quick-btn {
-  flex-shrink: 0;
-  padding: 10px 14px;
+.shift-select-wrap {
+  position: relative;
+}
+.shift-select {
+  width: 100%;
+  padding: 10px 36px 10px 14px;
   border: 1px solid var(--border);
   background: var(--card);
   border-radius: 10px;
-  font-size: 14px; font-weight: 500;
+  font-size: 15px; font-weight: 500;
+  font-family: inherit;
+  appearance: none;
+  -webkit-appearance: none;
   cursor: pointer;
-  white-space: nowrap;
-  display: flex; align-items: center; gap: 6px;
-  min-height: 42px;
+  min-height: 44px;
+  color: var(--text);
 }
-.quick-btn:active { background: #f0f0f3; }
-.quick-btn .swatch {
-  width: 10px; height: 10px; border-radius: 50%;
-  background: var(--shift);
+.shift-select:disabled {
+  background: var(--bg);
+  color: var(--sub);
+  cursor: not-allowed;
 }
-.quick-btn.misc {
-  background: var(--accent); color: white; border-color: var(--accent);
+.shift-select-wrap::after {
+  content: '▼';
+  position: absolute;
+  right: 14px; top: 50%; transform: translateY(-50%);
+  font-size: 10px; color: var(--sub);
+  pointer-events: none;
 }
-.quick-btn.misc:active { opacity: 0.8; }
+.shift-apply-btn {
+  padding: 10px 18px;
+  background: var(--accent); color: white;
+  border: none; border-radius: 10px;
+  font-size: 14px; font-weight: 600;
+  cursor: pointer;
+  min-height: 44px;
+}
+.shift-apply-btn:disabled {
+  background: var(--border); color: var(--sub);
+  cursor: not-allowed;
+}
+.misc-btn {
+  padding: 10px 14px;
+  background: var(--card);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  font-size: 14px; font-weight: 600;
+  cursor: pointer;
+  min-height: 44px;
+}
+.misc-btn:disabled {
+  border-color: var(--border);
+  color: var(--sub);
+  cursor: not-allowed;
+}
 
 .tab-bar {
   position: fixed;
@@ -245,12 +261,6 @@ main {
 .album-item img {
   width: 100%; height: 100%; object-fit: cover;
 }
-.album-item.shared::after {
-  content: '共有';
-  position: absolute; top: 4px; right: 4px;
-  background: rgba(255,59,48,0.9); color: white;
-  font-size: 9px; padding: 2px 4px; border-radius: 3px;
-}
 .album-empty {
   text-align: center; padding: 60px 20px;
   color: var(--sub);
@@ -288,12 +298,6 @@ main {
   color: white; border: none;
   padding: 10px 16px; border-radius: 8px;
   font-size: 13px; cursor: pointer;
-}
-.photo-viewer .controls button.share-btn {
-  background: rgba(52,199,89,0.5);
-}
-.photo-viewer .controls button.share-btn.on {
-  background: rgba(255,59,48,0.7);
 }
 .photo-viewer .close-btn {
   position: absolute;
@@ -372,26 +376,6 @@ main {
 .kind-tabs button.active {
   background: var(--accent); color: white; border-color: var(--accent);
 }
-.share-toggle {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 12px; background: var(--bg); border-radius: 8px;
-  margin-bottom: 14px;
-}
-.share-toggle .label { font-size: 14px; }
-.toggle-switch {
-  position: relative; width: 50px; height: 30px;
-  background: #ccc; border-radius: 15px;
-  cursor: pointer; transition: background 0.2s;
-  flex-shrink: 0;
-}
-.toggle-switch.on { background: var(--shift); }
-.toggle-switch::after {
-  content: ''; position: absolute; top: 2px; left: 2px;
-  width: 26px; height: 26px; background: white; border-radius: 50%;
-  transition: transform 0.2s;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-}
-.toggle-switch.on::after { transform: translateX(20px); }
 .image-area {
   display: flex; gap: 8px; flex-wrap: wrap;
   margin-bottom: 14px;
@@ -427,7 +411,7 @@ main {
 }
 .btn-cancel { background: var(--bg); color: var(--text); }
 .btn-save { background: var(--accent); color: white; }
-.btn-delete { background: var(--shared); color: white; }
+.btn-delete { background: #ff3b30; color: white; }
 
 .detail-event {
   display: flex; align-items: flex-start; gap: 10px;
@@ -445,7 +429,7 @@ main {
   border: none; background: transparent; padding: 4px 8px;
   font-size: 12px; color: var(--accent); cursor: pointer;
 }
-.detail-actions .del-btn { color: var(--shared); }
+.detail-actions .del-btn { color: #ff3b30; }
 .detail-event .dot {
   margin-top: 8px; width: 10px; height: 10px;
   border-radius: 50%; flex-shrink: 0;
@@ -507,10 +491,6 @@ main {
 <header>
   <div class="header-inner">
     <div class="title" id="header-title">家族カレンダー</div>
-    <div class="user-toggle" id="user-toggle">
-      <button id="user-self" class="active">自分</button>
-      <button id="user-family">家族</button>
-    </div>
   </div>
   <div class="jump-bar" id="jump-bar">
     <button id="jump-today">今日</button>
@@ -536,8 +516,16 @@ main {
 </label>
 
 <div class="quick-bar" id="quick-bar">
-  <div class="quick-target" id="quick-target">日付をタップしてシフトを選択</div>
-  <div class="quick-buttons" id="quick-buttons"></div>
+  <div class="quick-target" id="quick-target">日付をタップして追加</div>
+  <div class="quick-row">
+    <div class="shift-select-wrap">
+      <select class="shift-select" id="shift-select" disabled>
+        <option value="">シフトを選択...</option>
+      </select>
+    </div>
+    <button class="shift-apply-btn" id="shift-apply" disabled>追加</button>
+    <button class="misc-btn" id="misc-btn" disabled>その他</button>
+  </div>
 </div>
 
 <nav class="tab-bar">
@@ -581,10 +569,6 @@ main {
         ＋
         <input type="file" id="f-image" accept="image/*" multiple>
       </label>
-    </div>
-    <div class="share-toggle">
-      <span class="label">家族と共有する</span>
-      <div class="toggle-switch" id="share-toggle"></div>
     </div>
     <div class="modal-actions">
       <button class="btn-cancel" id="btn-cancel">キャンセル</button>
@@ -646,10 +630,6 @@ main {
       <label>カラー</label>
       <input type="color" id="sf-color" value="#34c759">
     </div>
-    <div class="share-toggle">
-      <span class="label">家族と共有する(デフォルト)</span>
-      <div class="toggle-switch" id="sf-share"></div>
-    </div>
     <div class="modal-actions">
       <button class="btn-cancel" id="sf-cancel">キャンセル</button>
       <button class="btn-delete" id="sf-delete" style="display:none;">削除</button>
@@ -664,20 +644,19 @@ main {
   <img id="pv-img">
   <div class="controls">
     <button id="pv-prev">◀</button>
-    <button id="pv-share" class="share-btn">共有</button>
     <button id="pv-delete">削除</button>
     <button id="pv-next">▶</button>
   </div>
 </div>
 
 <script>
-const STORAGE_KEY = 'family-calendar-v2';
+const STORAGE_KEY = 'family-calendar-v3';
 
 const DEFAULT_SHIFTS = [
-  { id: 'sh-asa',  name: '早番', start: '06:00', end: '14:30', color: '#34c759', shared: true },
-  { id: 'sh-oso',  name: '遅番', start: '13:00', end: '22:00', color: '#ff9500', shared: true },
-  { id: 'sh-ake',  name: '明け', start: '',      end: '',      color: '#5ac8fa', shared: true },
-  { id: 'sh-yasu', name: '公休', start: '',      end: '',      color: '#af52de', shared: true }
+  { id: 'sh-asa',  name: '早番', start: '06:00', end: '14:30', color: '#34c759' },
+  { id: 'sh-oso',  name: '遅番', start: '13:00', end: '22:00', color: '#ff9500' },
+  { id: 'sh-ake',  name: '明け', start: '',      end: '',      color: '#5ac8fa' },
+  { id: 'sh-yasu', name: '公休', start: '',      end: '',      color: '#af52de' }
 ];
 
 function loadData() {
@@ -698,15 +677,12 @@ function saveData(data) {
 }
 
 let state = loadData();
-let viewUser = 'self';
 let viewMode = 'calendar';
 let selectedDate = null;
 let editingId = null;
 let editingKind = 'shift';
-let editingShared = false;
 let editingImages = [];
 let editingShiftId = null;
-let editingShiftShared = true;
 let viewerImages = [];
 let viewerIndex = 0;
 let viewerMode = 'album';
@@ -726,10 +702,6 @@ function escapeHtml(s) {
 }
 
 const DOW = ['日','月','火','水','木','金','土'];
-function isVisibleForUser(ev) {
-  if (viewUser === 'self') return true;
-  return ev.shared === true;
-}
 
 function renderCalendar() {
   const main = document.getElementById('calendar-list');
@@ -743,7 +715,7 @@ function renderCalendar() {
   
   const today = ymd(new Date());
   const eventsByDate = {};
-  state.events.filter(isVisibleForUser).forEach(ev => {
+  state.events.forEach(ev => {
     if (!eventsByDate[ev.date]) eventsByDate[ev.date] = [];
     eventsByDate[ev.date].push(ev);
   });
@@ -784,13 +756,12 @@ function renderCalendar() {
         chip.className = 'event-chip';
         if (ev.kind === 'task' && ev.done) chip.classList.add('task-done');
         const timeStr = ev.time ? `${ev.time} ` : '';
-        const sharedMark = (viewUser==='self' && ev.shared) ? '<span class="shared-mark">共有</span>' : '';
         const imgMark = (ev.images && ev.images.length>0) ? '<span class="img-mark">📷</span>' : '';
         let tagStyle = '';
         if (ev.kind === 'shift' && ev.shiftColor) {
           tagStyle = `style="background:${ev.shiftColor}"`;
         }
-        chip.innerHTML = `<span class="tag tag-${ev.kind}" ${tagStyle}></span><span>${timeStr}${escapeHtml(ev.title)}</span>${imgMark}${sharedMark}`;
+        chip.innerHTML = `<span class="tag tag-${ev.kind}" ${tagStyle}></span><span>${timeStr}${escapeHtml(ev.title)}</span>${imgMark}`;
         eventsCell.appendChild(chip);
       });
     }
@@ -830,39 +801,51 @@ function onDayClick(dateStr) {
   }
 }
 
-function renderQuickBar() {
-  const buttons = document.getElementById('quick-buttons');
-  buttons.innerHTML = '';
+function renderShiftSelect() {
+  const sel = document.getElementById('shift-select');
+  sel.innerHTML = '<option value="">シフトを選択...</option>';
   state.shifts.forEach(sh => {
-    const btn = document.createElement('button');
-    btn.className = 'quick-btn';
-    const timeStr = sh.start ? ` ${sh.start}〜` : '';
-    btn.innerHTML = `<span class="swatch" style="background:${sh.color}"></span>${escapeHtml(sh.name)}${timeStr}`;
-    btn.onclick = () => applyShift(sh.id);
-    buttons.appendChild(btn);
+    const opt = document.createElement('option');
+    opt.value = sh.id;
+    const timeStr = sh.start && sh.end ? ` (${sh.start}〜${sh.end})`
+                  : sh.start ? ` (${sh.start}〜)`
+                  : '';
+    opt.textContent = `${sh.name}${timeStr}`;
+    sel.appendChild(opt);
   });
-  const misc = document.createElement('button');
-  misc.className = 'quick-btn misc';
-  misc.textContent = 'その他＋';
-  misc.onclick = () => {
-    if (!selectedDate) { alert('先に日付をタップしてください'); return; }
-    openEdit(null, selectedDate);
-  };
-  buttons.appendChild(misc);
 }
+
 function updateQuickBar() {
   const t = document.getElementById('quick-target');
+  const sel = document.getElementById('shift-select');
+  const apply = document.getElementById('shift-apply');
+  const misc = document.getElementById('misc-btn');
   if (selectedDate) {
     const d = parseYmd(selectedDate);
     t.textContent = `${d.getMonth()+1}月${d.getDate()}日(${DOW[d.getDay()]}) に追加`;
     t.classList.add('active');
+    sel.disabled = false;
+    apply.disabled = !sel.value;
+    misc.disabled = false;
   } else {
-    t.textContent = '日付をタップしてシフトを選択';
+    t.textContent = '日付をタップして追加';
     t.classList.remove('active');
+    sel.disabled = true;
+    sel.value = '';
+    apply.disabled = true;
+    misc.disabled = true;
   }
 }
-function applyShift(shiftId) {
+
+document.getElementById('shift-select').addEventListener('change', () => {
+  document.getElementById('shift-apply').disabled = !document.getElementById('shift-select').value;
+});
+
+document.getElementById('shift-apply').onclick = () => {
   if (!selectedDate) { alert('先に日付をタップしてください'); return; }
+  const sel = document.getElementById('shift-select');
+  const shiftId = sel.value;
+  if (!shiftId) return;
   const sh = state.shifts.find(s => s.id === shiftId);
   if (!sh) return;
   const dup = state.events.find(e => e.date === selectedDate && e.kind === 'shift' && e.title === sh.name);
@@ -876,15 +859,22 @@ function applyShift(shiftId) {
     time: sh.start || '',
     note: sh.start && sh.end ? `${sh.start}〜${sh.end}` : '',
     kind: 'shift',
-    shared: !!sh.shared,
     shiftColor: sh.color,
     images: [],
     done: false,
     createdAt: Date.now()
   });
   saveData(state);
+  // 連続入力のため選択は維持、選択リセット
+  sel.value = '';
+  document.getElementById('shift-apply').disabled = true;
   renderCalendar();
-}
+};
+
+document.getElementById('misc-btn').onclick = () => {
+  if (!selectedDate) { alert('先に日付をタップしてください'); return; }
+  openEdit(null, selectedDate);
+};
 
 function openDetail(dateStr) {
   const modal = document.getElementById('detail-modal');
@@ -893,7 +883,7 @@ function openDetail(dateStr) {
   const d = parseYmd(dateStr);
   label.textContent = `${d.getMonth()+1}月${d.getDate()}日(${DOW[d.getDay()]})`;
   
-  const evs = state.events.filter(e => e.date === dateStr && isVisibleForUser(e));
+  const evs = state.events.filter(e => e.date === dateStr);
   evs.sort((a,b) => (a.time||'99') > (b.time||'99') ? 1 : -1);
   
   if (evs.length === 0) {
@@ -905,7 +895,6 @@ function openDetail(dateStr) {
       div.className = 'detail-event';
       const kindLabel = {shift:'シフト',family:'家族予定',memo:'メモ',task:'タスク'}[ev.kind];
       const timeStr = ev.time ? ` / ${ev.time}` : '';
-      const sharedStr = ev.shared ? ' / 共有中' : '';
       const taskStr = ev.kind==='task' ? (ev.done ? ' / 完了' : ' / 未完了') : '';
       const dotColor = (ev.kind === 'shift' && ev.shiftColor) ? ev.shiftColor :
         ({shift:'#34c759',family:'#ff9500',memo:'#5ac8fa',task:'#af52de'}[ev.kind]);
@@ -913,7 +902,7 @@ function openDetail(dateStr) {
         <div class="dot" style="background:${dotColor}"></div>
         <div class="body">
           <div class="ttl">${escapeHtml(ev.title)}</div>
-          <div class="meta">${kindLabel}${timeStr}${sharedStr}${taskStr}</div>
+          <div class="meta">${kindLabel}${timeStr}${taskStr}</div>
           ${ev.note ? `<div class="note">${escapeHtml(ev.note)}</div>` : ''}
           ${ev.images && ev.images.length>0 ? `<div class="imgs">${ev.images.map((src,i)=>`<img src="${src}" data-event="${ev.id}" data-idx="${i}">`).join('')}</div>` : ''}
           <div class="detail-actions">
@@ -967,7 +956,6 @@ function openEdit(eventId, defaultDate) {
     if (!ev) return;
     editingId = ev.id;
     editingKind = ev.kind;
-    editingShared = !!ev.shared;
     editingImages = ev.images ? [...ev.images] : [];
     document.getElementById('f-title').value = ev.title || '';
     document.getElementById('f-date').value = ev.date;
@@ -978,7 +966,6 @@ function openEdit(eventId, defaultDate) {
   } else {
     editingId = null;
     editingKind = 'family';
-    editingShared = false;
     editingImages = [];
     document.getElementById('f-title').value = '';
     document.getElementById('f-date').value = defaultDate || ymd(new Date());
@@ -987,7 +974,7 @@ function openEdit(eventId, defaultDate) {
     titleEl.textContent = '予定を追加';
     document.getElementById('btn-delete').style.display = 'none';
   }
-  updateKindTabs(); updateShareToggle(); renderImages();
+  updateKindTabs(); renderImages();
   modal.classList.add('show');
 }
 function closeEdit() { document.getElementById('edit-modal').classList.remove('show'); }
@@ -996,7 +983,6 @@ function updateKindTabs() {
     b.classList.toggle('active', b.dataset.kind === editingKind);
   });
 }
-function updateShareToggle() { document.getElementById('share-toggle').classList.toggle('on', editingShared); }
 function renderImages() {
   const area = document.getElementById('image-area');
   area.querySelectorAll('.image-thumb').forEach(n => n.remove());
@@ -1012,7 +998,6 @@ function renderImages() {
 document.querySelectorAll('#kind-tabs button').forEach(b => {
   b.onclick = () => { editingKind = b.dataset.kind; updateKindTabs(); };
 });
-document.getElementById('share-toggle').onclick = () => { editingShared = !editingShared; updateShareToggle(); };
 document.getElementById('f-image').onchange = async (e) => {
   const files = Array.from(e.target.files || []);
   for (const file of files) {
@@ -1058,11 +1043,11 @@ document.getElementById('btn-save').onclick = () => {
   
   if (editingId) {
     const ev = state.events.find(e => e.id === editingId);
-    Object.assign(ev, { title, date, time, note, kind: editingKind, shared: editingShared, images: editingImages });
+    Object.assign(ev, { title, date, time, note, kind: editingKind, images: editingImages });
   } else {
     state.events.push({
       id: uid(), title, date, time, note,
-      kind: editingKind, shared: editingShared,
+      kind: editingKind,
       images: editingImages, done: false, createdAt: Date.now()
     });
   }
@@ -1076,18 +1061,6 @@ document.getElementById('btn-delete').onclick = () => {
   }
 };
 
-document.getElementById('user-self').onclick = () => {
-  viewUser = 'self';
-  document.getElementById('user-self').classList.add('active');
-  document.getElementById('user-family').classList.remove('active');
-  if (viewMode === 'calendar') renderCalendar(); else renderAlbum();
-};
-document.getElementById('user-family').onclick = () => {
-  viewUser = 'family';
-  document.getElementById('user-family').classList.add('active');
-  document.getElementById('user-self').classList.remove('active');
-  if (viewMode === 'calendar') renderCalendar(); else renderAlbum();
-};
 document.getElementById('jump-today').onclick = () => {
   currentCenterDate = new Date(); selectedDate = null;
   updateQuickBar(); renderCalendar();
@@ -1134,22 +1107,18 @@ function switchTab(mode) {
 function renderAlbum() {
   const grid = document.getElementById('album-grid');
   const header = document.getElementById('album-header');
-  const photos = state.album.filter(p => viewUser === 'self' || p.shared);
+  const photos = [...state.album];
   
-  header.textContent = viewUser === 'self'
-    ? `${photos.length}枚 / タップで拡大、ビューアから共有切替`
-    : `${photos.length}枚(共有分のみ表示)`;
+  header.textContent = `${photos.length}枚 / タップで拡大`;
   
   if (photos.length === 0) {
-    grid.innerHTML = '<div class="album-empty" style="grid-column:1/-1;">' +
-      (viewUser === 'self' ? '右下の＋から写真を追加' : '共有された写真はまだありません') +
-      '</div>';
+    grid.innerHTML = '<div class="album-empty" style="grid-column:1/-1;">右下の＋から写真を追加</div>';
     return;
   }
   
   photos.sort((a,b) => b.createdAt - a.createdAt);
   grid.innerHTML = photos.map((p, i) =>
-    `<div class="album-item ${p.shared?'shared':''}" data-id="${p.id}"><img src="${p.src}"></div>`
+    `<div class="album-item" data-id="${p.id}"><img src="${p.src}"></div>`
   ).join('');
   
   grid.querySelectorAll('.album-item').forEach((el, i) => {
@@ -1162,7 +1131,7 @@ document.getElementById('album-file').onchange = async (e) => {
   for (const file of files) {
     const dataUrl = await resizeAndEncode(file, 1280);
     state.album.push({
-      id: uid(), src: dataUrl, shared: false, createdAt: Date.now()
+      id: uid(), src: dataUrl, createdAt: Date.now()
     });
   }
   saveData(state); renderAlbum();
@@ -1173,7 +1142,6 @@ function openPhotoViewer(srcs, idx, mode, eventId, photoObjs) {
   viewerImages = srcs; viewerIndex = idx; viewerMode = mode;
   viewerPhotos = photoObjs || [];
   document.getElementById('pv-img').src = srcs[idx];
-  document.getElementById('pv-share').style.display = (mode === 'album') ? 'block' : 'none';
   updateViewerMeta();
   document.getElementById('photo-viewer').classList.add('show');
 }
@@ -1182,10 +1150,7 @@ function updateViewerMeta() {
   if (viewerMode === 'album' && viewerPhotos[viewerIndex]) {
     const p = viewerPhotos[viewerIndex];
     const d = new Date(p.createdAt);
-    const sharedTxt = p.shared ? ' / 共有中' : ' / 非共有';
-    meta.textContent = `${viewerIndex+1}/${viewerImages.length} | ${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}${sharedTxt}`;
-    document.getElementById('pv-share').textContent = p.shared ? '共有解除' : '共有';
-    document.getElementById('pv-share').classList.toggle('on', p.shared);
+    meta.textContent = `${viewerIndex+1}/${viewerImages.length} | ${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
   } else {
     meta.textContent = `${viewerIndex+1}/${viewerImages.length}`;
   }
@@ -1207,13 +1172,6 @@ document.getElementById('pv-next').onclick = () => {
     updateViewerMeta();
   }
 };
-document.getElementById('pv-share').onclick = () => {
-  if (viewerMode !== 'album') return;
-  const p = viewerPhotos[viewerIndex];
-  if (!p) return;
-  p.shared = !p.shared;
-  saveData(state); updateViewerMeta();
-};
 document.getElementById('pv-delete').onclick = () => {
   if (viewerMode === 'album') {
     if (!confirm('この写真を削除しますか?')) return;
@@ -1233,7 +1191,7 @@ document.getElementById('open-settings').onclick = () => {
 };
 document.getElementById('settings-close').onclick = () => {
   document.getElementById('settings-modal').classList.remove('show');
-  renderQuickBar();
+  renderShiftSelect();
 };
 
 function renderShiftPatterns() {
@@ -1243,12 +1201,11 @@ function renderShiftPatterns() {
     const div = document.createElement('div');
     div.className = 'shift-list-item';
     const timeStr = sh.start && sh.end ? `${sh.start} 〜 ${sh.end}` : '時刻なし';
-    const sharedStr = sh.shared ? ' / 共有' : '';
     div.innerHTML = `
       <div class="swatch" style="background:${sh.color}"></div>
       <div class="info">
         <div>${escapeHtml(sh.name)}</div>
-        <div class="sub">${timeStr}${sharedStr}</div>
+        <div class="sub">${timeStr}</div>
       </div>
       <div class="actions">
         <button data-edit="${sh.id}">編集</button>
@@ -1271,7 +1228,6 @@ function openShiftEdit(shiftId) {
     document.getElementById('sf-start').value = sh.start || '';
     document.getElementById('sf-end').value = sh.end || '';
     document.getElementById('sf-color').value = sh.color;
-    editingShiftShared = !!sh.shared;
     document.getElementById('shift-edit-title').textContent = 'シフト編集';
     document.getElementById('sf-delete').style.display = 'block';
   } else {
@@ -1280,17 +1236,11 @@ function openShiftEdit(shiftId) {
     document.getElementById('sf-start').value = '';
     document.getElementById('sf-end').value = '';
     document.getElementById('sf-color').value = '#34c759';
-    editingShiftShared = true;
     document.getElementById('shift-edit-title').textContent = 'シフト追加';
     document.getElementById('sf-delete').style.display = 'none';
   }
-  document.getElementById('sf-share').classList.toggle('on', editingShiftShared);
   document.getElementById('shift-edit-modal').classList.add('show');
 }
-document.getElementById('sf-share').onclick = () => {
-  editingShiftShared = !editingShiftShared;
-  document.getElementById('sf-share').classList.toggle('on', editingShiftShared);
-};
 document.getElementById('sf-cancel').onclick = () => {
   document.getElementById('shift-edit-modal').classList.remove('show');
 };
@@ -1303,9 +1253,9 @@ document.getElementById('sf-save').onclick = () => {
   
   if (editingShiftId) {
     const sh = state.shifts.find(s => s.id === editingShiftId);
-    Object.assign(sh, { name, start, end, color, shared: editingShiftShared });
+    Object.assign(sh, { name, start, end, color });
   } else {
-    state.shifts.push({ id: uid(), name, start, end, color, shared: editingShiftShared });
+    state.shifts.push({ id: uid(), name, start, end, color });
   }
   saveData(state);
   document.getElementById('shift-edit-modal').classList.remove('show');
@@ -1342,7 +1292,7 @@ document.getElementById('import-file').onchange = async (e) => {
     if (!state.shifts) state.shifts = DEFAULT_SHIFTS;
     if (!state.album) state.album = [];
     saveData(state);
-    renderShiftPatterns(); renderQuickBar(); renderCalendar();
+    renderShiftPatterns(); renderShiftSelect(); renderCalendar();
     alert('読み込み完了');
   } catch(err) { alert('読み込み失敗: ' + err.message); }
   e.target.value = '';
@@ -1353,14 +1303,14 @@ document.getElementById('detail-modal').onclick = e => { if (e.target.id === 'de
 document.getElementById('settings-modal').onclick = e => {
   if (e.target.id === 'settings-modal') {
     document.getElementById('settings-modal').classList.remove('show');
-    renderQuickBar();
+    renderShiftSelect();
   }
 };
 document.getElementById('shift-edit-modal').onclick = e => {
   if (e.target.id === 'shift-edit-modal') document.getElementById('shift-edit-modal').classList.remove('show');
 };
 
-renderQuickBar();
+renderShiftSelect();
 updateQuickBar();
 renderCalendar();
 </script>
